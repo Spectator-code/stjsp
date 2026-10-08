@@ -1,5 +1,153 @@
 "use client";
+import { useEffect } from "react";
+import Link from "next/link";
+
 export default function Tuition() {
+  const studentData = {
+    "1": { name: "Angelica Morales", balance: "₱1,500.00", rawVal: 1500, package: "Dual Promo" },
+    "2": { name: "Joshua De Jesus", balance: "₱4,000.00", rawVal: 4000, package: "PDC Manual" },
+    "3": { name: "Danilo Santos Jr.", balance: "₱2,000.00", rawVal: 2000, package: "TDC Classroom" },
+    "4": { name: "Bea Patricia Lim", balance: "₱4,500.00", rawVal: 4500, package: "PDC Auto" }
+  };
+
+  function updateStudentBalance() {
+    const select = document.getElementById('studentSelect');
+    if (!select) return;
+    const val = select.value;
+    const data = studentData[val];
+    if (data) {
+      const as = document.getElementById('activeStudentLabel'); if (as) as.textContent = data.name;
+      const ab = document.getElementById('activeStudentBalance'); if (ab) ab.textContent = data.balance;
+      const ai = document.getElementById('amountInput'); if (ai) ai.value = data.rawVal;
+    }
+  }
+
+  function setQuickAmount(amt) {
+    const ai = document.getElementById('amountInput'); if (ai) ai.value = amt;
+  }
+
+  function filterTable() {
+    const cf = document.getElementById('channelFilter');
+    const si = document.getElementById('searchInput');
+    const channelVal = cf ? cf.value : 'all';
+    const query = si ? si.value.toLowerCase().trim() : '';
+    const rows = document.querySelectorAll('.table-row-item');
+
+    rows.forEach(row => {
+      const method = row.getAttribute('data-method');
+      const searchable = (row.getAttribute('data-search') || '').toLowerCase();
+
+      const channelMatch = (channelVal === 'all') || (method === channelVal);
+      const searchMatch = !query || searchable.includes(query);
+
+      if (channelMatch && searchMatch) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  function showToast(title, subtitle) {
+    const toast = document.getElementById('toastNotification');
+    if (!toast) return;
+    const tt = document.getElementById('toastTitle'); if (tt) tt.textContent = title;
+    const ts = document.getElementById('toastSub'); if (ts) ts.textContent = subtitle;
+    toast.classList.remove('translate-y-32');
+    setTimeout(() => {
+      toast.classList.add('translate-y-32');
+    }, 4000);
+  }
+
+  function handlePaymentSubmit(e) {
+    e.preventDefault();
+    const select = document.getElementById('studentSelect');
+    if (!select) return;
+    const student = studentData[select.value] || { name: 'Student Driver' };
+    const amount = document.getElementById('amountInput').value;
+    const orNum = document.getElementById('autoOrNumber').textContent;
+    const channelEl = document.querySelector('input[name="payChannel"]:checked');
+    const payChannel = channelEl ? channelEl.value : 'Cash Counter';
+    const formattedAmt = "₱" + Number(amount).toLocaleString();
+
+    printReceipt(orNum, student.name, formattedAmt, payChannel);
+    const parts = orNum.split('-');
+    const currentSerial = parseInt(parts[2] || '1083');
+    document.getElementById('autoOrNumber').textContent = "OR-2024-" + (currentSerial + 1);
+    const rn = document.getElementById('refNotes'); if (rn) rn.value = "";
+  }
+
+  function voidReceipt(orNum, studentName, amount) {
+    if (typeof window !== 'undefined' && window.showConfirmDialog) {
+      window.showConfirmDialog({
+        title: 'Void Official Receipt',
+        message: 'Are you sure you want to void ' + orNum + ' for ' + studentName + ' (' + amount + ')? This will reverse the account credit and flag the till ledger audit.',
+        badge: 'Ledger Audit Reversal',
+        type: 'danger',
+        confirmText: 'Void Receipt',
+        details: [
+          { label: 'Target OR #', value: orNum },
+          { label: 'Student Driver', value: studentName },
+          { label: 'Reversal Amount', value: amount },
+          { label: 'Action Warning', value: 'Requires supervisor override approval' }
+        ],
+        onConfirm: () => {
+          showToast('Receipt Voided', orNum + ' marked VOID. Balance reversed for ' + studentName + '.');
+        }
+      });
+    } else {
+      showToast('Receipt Voided', orNum + ' marked VOID. Balance reversed for ' + studentName + '.');
+    }
+  }
+
+  function printReceipt(orNum, studentName, amount, channel = 'Cash Counter') {
+    const ro = document.getElementById('recOrNum'); if (ro) ro.textContent = orNum;
+    const rs = document.getElementById('recStudent'); if (rs) rs.textContent = studentName;
+    const ra = document.getElementById('recAmount'); if (ra) ra.textContent = amount;
+    const rm = document.getElementById('recMethod'); if (rm) rm.textContent = channel;
+    const rModal = document.getElementById('receiptModal'); if (rModal) rModal.classList.remove('hidden');
+    showToast("Official Receipt Preview", orNum + " slip prepared for " + studentName + " (" + amount + ").");
+  }
+
+  function closeReceiptModal() {
+    const rm = document.getElementById('receiptModal'); if (rm) rm.classList.add('hidden');
+  }
+
+  function shiftTuitionPage(page) {
+    const b1 = document.getElementById('tPageBtn1');
+    if (b1) b1.className = page === 1 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';
+    const b2 = document.getElementById('tPageBtn2');
+    if (b2) b2.className = page === 2 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';
+    const tl = document.getElementById('tuitionPageLabel');
+    if (tl) tl.textContent = 'Showing 5 of 14 Transactions Logged Today (Page ' + page + ') • Tagum Main Campus';
+    showToast("Pagination Switched", "Viewing cashier transactions batch " + page + ".");
+  }
+
+  function triggerExportNotice() {
+    showToast("Generating Export Ledger", "Compiling Tagum Campus Official Ledger to CSV & PDF format...");
+  }
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      document.body.removeAttribute('data-print-target');
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    window.updateStudentBalance = updateStudentBalance;
+    window.setQuickAmount = setQuickAmount;
+    window.filterTable = filterTable;
+    window.showToast = showToast;
+    window.handlePaymentSubmit = handlePaymentSubmit;
+    window.voidReceipt = voidReceipt;
+    window.printReceipt = printReceipt;
+    window.closeReceiptModal = closeReceiptModal;
+    window.shiftTuitionPage = shiftTuitionPage;
+    window.triggerExportNotice = triggerExportNotice;
+
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
   return (
     <>
       
@@ -9,7 +157,7 @@ export default function Tuition() {
     <div className="flex flex-col">
       {/* Logo Header */}
       <div className="h-16 px-5 border-b border-slate-100 flex items-center gap-3">
-        <img src="../assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
+        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
         <div className="flex flex-col min-w-0">
           <span className="font-display text-xs font-extrabold text-slate-900 tracking-tight truncate">ST. JOSEPH CUPERTINO</span>
           <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider truncate">Driving School • Tagum</span>
@@ -33,41 +181,41 @@ export default function Tuition() {
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Core Management</span>
         </div>
         <nav className="space-y-1 text-xs">
-          <a href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">dashboard</span>
             Operations Dashboard
-          </a>
-          <a href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">calendar_month</span>
             Scheduling & Dispatch
-          </a>
-          <a href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">school</span>
             Students & Progress
-          </a>
-          <a href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
+          </Link>
+          <Link href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
             <span className="material-symbols-outlined text-base">receipt_long</span>
             Tuition & Payments
-          </a>
-          <a href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">directions_car</span>
             Fleet & Instructors
-          </a>
-          <a href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">verified_user</span>
             Reports & Compliance
-          </a>
+          </Link>
 
           <div className="pt-3 my-2 border-t border-slate-100"></div>
 
-          <a href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">public</span>
             Public Website
-          </a>
-          <a href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
+          </Link>
+          <Link href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">logout</span>
             Sign Out
-          </a>
+          </Link>
         </nav>
       </div>
     </div>
@@ -95,7 +243,7 @@ export default function Tuition() {
 
       <div className="relative hidden lg:block w-72">
         <span className="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-sm">search</span>
-        <input id="topTuitionSearch" onInput={(e) => { window.document.getElementById('searchInput').value = this.value; filterTable(); }} type="text" placeholder="Search receipt OR#, student..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" />
+        <input id="topTuitionSearch" onInput={(e) => { const si = document.getElementById('searchInput'); if (si) si.value = e.target.value; if (typeof window !== 'undefined' && typeof window.filterTable === 'function') window.filterTable(); }} type="text" placeholder="Search receipt OR#, student..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" />
       </div>
     </div>
 
@@ -105,6 +253,11 @@ export default function Tuition() {
         <span>Today's Intake: <strong className="text-slate-900">₱46,500</strong></span>
         <span className="text-slate-300">•</span>
         <span><strong className="text-emerald-700">14</strong> Settled</span>
+      </div>
+
+      <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50/80 border border-emerald-200/60 text-xs text-emerald-800 font-medium">
+        <span className="material-symbols-outlined text-sm text-emerald-600">shield_lock</span>
+        <span>RA 10173 Protected</span>
       </div>
 
       <a href="/" className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors hidden sm:inline-flex items-center gap-1">
@@ -127,10 +280,10 @@ export default function Tuition() {
 
   {/* Main Content */}
   <main className="ml-64 pt-16 min-h-screen bg-slate-50 overflow-x-hidden">
-    <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto xl:max-w-none">
+    <div className="p-6 sm:p-8 pb-32 sm:pb-36 space-y-6 max-w-7xl mx-auto xl:max-w-none">
 
       {/* Header & Financial KPI Strip */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 kpi-cards">
         
         {/* Metric 1: Monthly Collections */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
@@ -225,7 +378,7 @@ export default function Tuition() {
       </div>
 
       {/* Active Course Package Rates Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 kpi-cards">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-base">sell</span>
@@ -289,7 +442,7 @@ export default function Tuition() {
         <div className="xl:col-span-8 space-y-4">
           
           {/* Filter Toolbar */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 action-toolbar">
             <div className="flex flex-wrap items-center gap-2">
               <select id="channelFilter" onChange={() => {filterTable()}} className="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-medium">
                 <option value="all">All Payment Channels</option>
@@ -301,11 +454,22 @@ export default function Tuition() {
 
               <div className="relative flex-1 min-w-[200px]">
                 <span className="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-sm">search</span>
-                <input id="searchInput" onKeyUp="filterTable()" type="text" placeholder="Search OR#, student, cashier..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
+                <input id="searchInput" onKeyUp={() => { if (typeof window !== 'undefined' && typeof window.filterTable === 'function') window.filterTable(); }} type="text" placeholder="Search OR#, student, cashier..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
               </div>
             </div>
 
-            <div className="flex items-center gap-2 justify-end">
+            <div className="flex items-center gap-2 justify-end no-print">
+              <button
+                type="button"
+                onClick={() => {
+                  document.body.setAttribute('data-print-target', 'ledger');
+                  window.print();
+                }}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">print</span>
+                Print Ledger
+              </button>
               <button onClick={() => {window.triggerExportNotice()}} className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition-colors">
                 <span className="material-symbols-outlined text-sm">file_download</span>
                 Export CSV / PDF
@@ -314,8 +478,22 @@ export default function Tuition() {
           </div>
 
           {/* Official Collections Ledger Table */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden printable-records">
+            <div className="print-header hidden pb-3 border-b-2 border-slate-900 mb-4 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display font-extrabold text-base text-slate-900">ST. JOSEPH CUPERTINO DRIVING SCHOOL</h2>
+                  <p className="text-xs text-slate-600">Tagum Main Campus • Pioneer Ave, Tagum City • LTO Accreditation No. 11-04-2023</p>
+                  <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Official Tuition Collections Ledger & Cashier Intake</p>
+                </div>
+                <div className="text-right text-xs text-slate-500 font-mono">
+                  <p>Series: <strong>2024-Nov-A</strong></p>
+                  <p>Cashier Till #1: <strong>Reconciled</strong></p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between no-print">
               <div className="flex items-center gap-2">
                 <h3 className="font-display text-sm font-bold text-slate-900">Official Collections Ledger</h3>
                 <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">Series 2024-Nov-A</span>
@@ -335,7 +513,7 @@ export default function Tuition() {
                     <th className="py-3 px-4 whitespace-nowrap">Method & Ref</th>
                     <th className="py-3 px-4 text-right whitespace-nowrap">Amount Paid</th>
                     <th className="py-3 px-4 text-right whitespace-nowrap">Balance</th>
-                    <th className="py-3 px-3 text-center">Receipt</th>
+                    <th className="py-3 px-3 text-center no-print-col">Receipt</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -363,10 +541,15 @@ export default function Tuition() {
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">₱4,000.00</td>
                     <td className="py-3 px-4 text-right font-mono text-amber-700 font-medium">₱1,500.00</td>
-                    <td className="py-3 px-3 text-center">
-                      <button onClick={() => {window.printReceipt('OR-2024-1082', 'Angelica Morales', '₱4,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors" title="Print Receipt">
-                        <span className="material-symbols-outlined text-sm">print</span>
-                      </button>
+                    <td className="py-3 px-3 text-center no-print-col">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => {window.printReceipt('OR-2024-1082', 'Angelica Morales', '₱4,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Print Receipt" aria-label="Print receipt OR-2024-1082">
+                          <span className="material-symbols-outlined text-sm">print</span>
+                        </button>
+                        <button onClick={() => {window.voidReceipt('OR-2024-1082', 'Angelica Morales', '₱4,000.00')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Void Official Receipt" aria-label="Void receipt OR-2024-1082">
+                          <span className="material-symbols-outlined text-sm">block</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
@@ -393,10 +576,15 @@ export default function Tuition() {
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">₱9,000.00</td>
                     <td className="py-3 px-4 text-right font-mono text-emerald-700 font-semibold">₱0.00</td>
-                    <td className="py-3 px-3 text-center">
-                      <button onClick={() => {window.printReceipt('OR-2024-1081', 'Roberto Tan', '₱9,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors" title="Print Receipt">
-                        <span className="material-symbols-outlined text-sm">print</span>
-                      </button>
+                    <td className="py-3 px-3 text-center no-print-col">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => {window.printReceipt('OR-2024-1081', 'Roberto Tan', '₱9,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Print Receipt" aria-label="Print receipt OR-2024-1081">
+                          <span className="material-symbols-outlined text-sm">print</span>
+                        </button>
+                        <button onClick={() => {window.voidReceipt('OR-2024-1081', 'Roberto Tan', '₱9,000.00')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Void Official Receipt" aria-label="Void receipt OR-2024-1081">
+                          <span className="material-symbols-outlined text-sm">block</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
@@ -423,10 +611,15 @@ export default function Tuition() {
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">₱2,000.00</td>
                     <td className="py-3 px-4 text-right font-mono text-emerald-700 font-semibold">₱0.00</td>
-                    <td className="py-3 px-3 text-center">
-                      <button onClick={() => {window.printReceipt('OR-2024-1080', 'Jasmine Claridad', '₱2,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors" title="Print Receipt">
-                        <span className="material-symbols-outlined text-sm">print</span>
-                      </button>
+                    <td className="py-3 px-3 text-center no-print-col">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => {window.printReceipt('OR-2024-1080', 'Jasmine Claridad', '₱2,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Print Receipt" aria-label="Print receipt OR-2024-1080">
+                          <span className="material-symbols-outlined text-sm">print</span>
+                        </button>
+                        <button onClick={() => {window.voidReceipt('OR-2024-1080', 'Jasmine Claridad', '₱2,000.00')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Void Official Receipt" aria-label="Void receipt OR-2024-1080">
+                          <span className="material-symbols-outlined text-sm">block</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
@@ -453,10 +646,15 @@ export default function Tuition() {
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">₱4,000.00</td>
                     <td className="py-3 px-4 text-right font-mono text-amber-700 font-medium">₱4,000.00</td>
-                    <td className="py-3 px-3 text-center">
-                      <button onClick={() => {window.printReceipt('OR-2024-1079', 'Joshua De Jesus', '₱4,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors" title="Print Receipt">
-                        <span className="material-symbols-outlined text-sm">print</span>
-                      </button>
+                    <td className="py-3 px-3 text-center no-print-col">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => {window.printReceipt('OR-2024-1079', 'Joshua De Jesus', '₱4,000.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Print Receipt" aria-label="Print receipt OR-2024-1079">
+                          <span className="material-symbols-outlined text-sm">print</span>
+                        </button>
+                        <button onClick={() => {window.voidReceipt('OR-2024-1079', 'Joshua De Jesus', '₱4,000.00')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Void Official Receipt" aria-label="Void receipt OR-2024-1079">
+                          <span className="material-symbols-outlined text-sm">block</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
@@ -483,10 +681,15 @@ export default function Tuition() {
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">₱3,500.00</td>
                     <td className="py-3 px-4 text-right font-mono text-emerald-700 font-semibold">₱0.00</td>
-                    <td className="py-3 px-3 text-center">
-                      <button onClick={() => {window.printReceipt('OR-2024-1078', 'Kristina Alcantara', '₱3,500.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors" title="Print Receipt">
-                        <span className="material-symbols-outlined text-sm">print</span>
-                      </button>
+                    <td className="py-3 px-3 text-center no-print-col">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => {window.printReceipt('OR-2024-1078', 'Kristina Alcantara', '₱3,500.00')}} className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Print Receipt" aria-label="Print receipt OR-2024-1078">
+                          <span className="material-symbols-outlined text-sm">print</span>
+                        </button>
+                        <button onClick={() => {window.voidReceipt('OR-2024-1078', 'Kristina Alcantara', '₱3,500.00')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Void Official Receipt" aria-label="Void receipt OR-2024-1078">
+                          <span className="material-symbols-outlined text-sm">block</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
@@ -494,7 +697,7 @@ export default function Tuition() {
               </table>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 no-print">
               <span id="tuitionPageLabel">Showing 5 of 14 Transactions Logged Today • Tagum Main Campus</span>
               <div className="flex items-center gap-1">
                 <button onClick={() => {window.shiftTuitionPage(1)}} className="px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold">Previous</button>
@@ -503,12 +706,17 @@ export default function Tuition() {
                 <button onClick={() => {window.shiftTuitionPage(2)}} className="px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold">Next</button>
               </div>
             </div>
+
+            <div className="print-footer hidden p-3 border-t border-slate-200 text-xs text-slate-600 justify-between">
+              <span>Certified Correct by Cashier: <strong>Maria Elena Santos</strong> __________________________</span>
+              <span>Official St. Joseph Cupertino Driving School Finance Record</span>
+            </div>
           </div>
 
         </div>
 
         {/* Right: Fast Intake Cashiering Drawer (4 cols) */}
-        <div className="xl:col-span-4" id="quickIntakePanel">
+        <div className="xl:col-span-4 intake-drawer" id="quickIntakePanel">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 sticky top-20 space-y-4">
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -570,9 +778,9 @@ export default function Tuition() {
                   <input id="amountInput" type="number" step="50" min="100" max="25000" defaultValue="1500" required className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-3 py-2 text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 mt-1.5 text-[11px]">
-                  <button type="button" onClick={() => {window.setQuickAmount(1500)}} className="py-1 rounded border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">Full</button>
-                  <button type="button" onClick={() => {window.setQuickAmount(1000)}} className="py-1 rounded border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">₱1,000</button>
-                  <button type="button" onClick={() => {window.setQuickAmount(500)}} className="py-1 rounded border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">₱500</button>
+                  <button type="button" onClick={() => setQuickAmount(1500)} className="py-1 rounded border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">Full</button>
+                  <button type="button" onClick={() => setQuickAmount(1000)} className="py-1 rounded border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">₱1,000</button>
+                  <button type="button" onClick={() => setQuickAmount(500)} className="py-1 rounded border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">₱500</button>
                 </div>
               </div>
 
@@ -625,12 +833,12 @@ export default function Tuition() {
   </main>
 
   {/* Official Receipt Preview Modal */}
-  <div id="receiptModal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="receiptModal" role="dialog" aria-modal="true" aria-labelledby="recModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-sm w-full border border-slate-200 shadow-2xl p-6 space-y-4 font-mono text-xs">
       
       <div className="text-center pb-3 border-b border-dashed border-slate-300 space-y-1 font-sans">
-        <img src="../assets/images/logo.png" alt="Logo" className="h-10 w-auto object-contain mx-auto" />
-        <h4 className="font-display font-extrabold text-sm text-slate-900">ST. JOSEPH CUPERTINO</h4>
+        <img src="/assets/images/logo.png" alt="Logo" className="h-10 w-auto object-contain mx-auto" />
+        <h4 id="recModalTitle" className="font-display font-extrabold text-sm text-slate-900">ST. JOSEPH CUPERTINO</h4>
         <p className="text-[10px] text-slate-500">Driving School • Tagum Main Campus</p>
         <p className="text-[9px] text-slate-400">LTO Accreditation No. DS-R11-2021-089</p>
       </div>
@@ -663,12 +871,24 @@ export default function Tuition() {
         <p className="text-[9px] text-emerald-700 font-bold">✔ VALID OFFICIAL RECEIPT FOR LTO GRADUATION</p>
       </div>
 
-      <div className="flex items-center gap-2 pt-2 font-sans">
-        <button onClick={() => {window.print()}} className="flex-1 py-2 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-xs">
+      <div className="flex items-center gap-2 pt-2 font-sans no-print">
+        <button
+          type="button"
+          onClick={() => {
+            document.body.setAttribute('data-print-target', 'receipt');
+            window.print();
+          }}
+          className="flex-1 py-2 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+        >
           <span className="material-symbols-outlined text-sm">print</span>
           Print Slip
         </button>
-        <button onClick={() => {window.closeReceiptModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+        <button
+          type="button"
+          onClick={() => closeReceiptModal()}
+          aria-label="Close official receipt modal"
+          className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+        >
           Close
         </button>
       </div>
@@ -677,17 +897,13 @@ export default function Tuition() {
   </div>
 
   {/* Notification Toast Modal */}
-  <div id="toastNotification" className="fixed bottom-6 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
+  <div id="toastNotification" role="status" aria-live="polite" className="fixed bottom-20 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
     <span className="material-symbols-outlined text-emerald-400">task_alt</span>
     <div className="flex flex-col text-xs">
       <span className="font-bold" id="toastTitle">Official Receipt Issued</span>
       <span className="text-slate-300" id="toastSub">OR-2024-1083 registered and printed</span>
     </div>
   </div>
-
-  <script dangerouslySetInnerHTML={{ __html: "\n    const studentData = {\n      \"1\": { name: \"Angelica Morales\", balance: \"₱1,500.00\", rawVal: 1500, package: \"Dual Promo\" },\n      \"2\": { name: \"Joshua De Jesus\", balance: \"₱4,000.00\", rawVal: 4000, package: \"PDC Manual\" },\n      \"3\": { name: \"Danilo Santos Jr.\", balance: \"₱2,000.00\", rawVal: 2000, package: \"TDC Classroom\" },\n      \"4\": { name: \"Bea Patricia Lim\", balance: \"₱4,500.00\", rawVal: 4500, package: \"PDC Auto\" }\n    };\n\n    function updateStudentBalance() {\n      const select = document.getElementById('studentSelect');\n      const val = select.value;\n      const data = studentData[val];\n      if (data) {\n        document.getElementById('activeStudentLabel').textContent = data.name;\n        document.getElementById('activeStudentBalance').textContent = data.balance;\n        document.getElementById('amountInput').value = data.rawVal;\n      }\n    }\n\n    function setQuickAmount(amt) {\n      document.getElementById('amountInput').value = amt;\n    }\n\n    function filterTable() {\n      const channelVal = document.getElementById('channelFilter').value;\n      const query = document.getElementById('searchInput').value.toLowerCase().trim();\n      const rows = document.querySelectorAll('.table-row-item');\n\n      rows.forEach(row => {\n        const method = row.getAttribute('data-method');\n        const searchable = row.getAttribute('data-search').toLowerCase();\n\n        const channelMatch = (channelVal === 'all') || (method === channelVal);\n        const searchMatch = !query || searchable.includes(query);\n\n        if (channelMatch && searchMatch) {\n          row.style.display = '';\n        } else {\n          row.style.display = 'none';\n        }\n      });\n    }\n\n    function showToast(title, subtitle) {\n      const toast = document.getElementById('toastNotification');\n      document.getElementById('toastTitle').textContent = title;\n      document.getElementById('toastSub').textContent = subtitle;\n      toast.classList.remove('translate-y-32');\n      setTimeout(() => {\n        toast.classList.add('translate-y-32');\n      }, 4000);\n    }\n\n    function handlePaymentSubmit(e) {\n      e.preventDefault();\n      const select = document.getElementById('studentSelect');\n      const student = studentData[select.value];\n      const amount = document.getElementById('amountInput').value;\n      const orNum = document.getElementById('autoOrNumber').textContent;\n      const payChannel = document.querySelector('input[name=\"payChannel\"]:checked').value;\n\n      printReceipt(orNum, student.name, \"₱\" + Number(amount).toLocaleString(), payChannel);\n      \n      const currentSerial = parseInt(orNum.split('-')[2]);\n      document.getElementById('autoOrNumber').textContent = \"OR-2024-\" + (currentSerial + 1);\n      document.getElementById('refNotes').value = \"\";\n    }\n\n    function printReceipt(orNum, studentName, amount, channel = 'Cash Counter') {\n      document.getElementById('recOrNum').textContent = orNum;\n      document.getElementById('recStudent').textContent = studentName;\n      document.getElementById('recAmount').textContent = amount;\n      document.getElementById('recMethod').textContent = channel;\n      document.getElementById('receiptModal').classList.remove('hidden');\n      showToast(\"Official Receipt Preview\", `${orNum} slip prepared for ${studentName} (${amount}).`);\n    }\n\n    function closeReceiptModal() {\n      document.getElementById('receiptModal').classList.add('hidden');\n    }\n\n    function shiftTuitionPage(page) {\n      document.getElementById('tPageBtn1').className = page === 1 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';\n      document.getElementById('tPageBtn2').className = page === 2 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';\n      document.getElementById('tuitionPageLabel').textContent = `Showing 5 of 14 Transactions Logged Today (Page ${page}) • Tagum Main Campus`;\n      showToast(\"Pagination Switched\", `Viewing cashier transactions batch ${page}.`);\n    }\n\n    function triggerExportNotice() {\n      showToast(\"Generating Export Ledger\", \"Compiling Tagum Campus Official Ledger to CSV & PDF format...\");\n    }\n  " }} />
-
-
     </>
   );
 }

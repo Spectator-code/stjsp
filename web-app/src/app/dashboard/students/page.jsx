@@ -1,5 +1,213 @@
 "use client";
+import { useEffect } from "react";
+import Link from "next/link";
+
 export default function Students() {
+  let activeStudent = {
+    name: 'Gabriel Santos',
+    id: 'SJD-2024-089',
+    permit: 'SP-11-2024-009284',
+    pkg: 'PDC Manual 15-Hour Deluxe',
+    hours: '12 / 15 hrs',
+    hoursPct: 80,
+    tdcScore: '96%',
+    attendance: '100%',
+    instructor: 'Roberto Aquino'
+  };
+
+  function showStudentToast(title, msg) {
+    const toast = document.getElementById('studentToast');
+    if (!toast) return;
+    const tt = document.getElementById('studentToastTitle'); if (tt) tt.textContent = title;
+    const tm = document.getElementById('studentToastMsg'); if (tm) tm.textContent = msg;
+    toast.classList.remove('translate-y-32');
+    setTimeout(() => { toast.classList.add('translate-y-32'); }, 4000);
+  }
+
+  function showStudentDetail(name, id, permit, pkg, hours, hoursPct, tdcScore, attendance, instructor, paymentStatus, receiptNo, initial) {
+    activeStudent = { name, id, permit, pkg, hours, hoursPct, tdcScore, attendance, instructor };
+    const dn = document.getElementById('detail-name'); if (dn) dn.textContent = name;
+    const di = document.getElementById('detail-initial'); if (di) di.textContent = initial;
+    const dp = document.getElementById('detail-package'); if (dp) dp.textContent = pkg;
+    const dpm = document.getElementById('detail-permit'); if (dpm) dpm.textContent = 'Permit: ' + permit;
+    const dh = document.getElementById('detail-hours'); if (dh) dh.textContent = hours;
+    const dhp = document.getElementById('detail-hours-pct'); if (dhp) dhp.textContent = hoursPct + '% Done';
+    const dt = document.getElementById('detail-tdc'); if (dt) dt.textContent = tdcScore;
+    const da = document.getElementById('detail-attendance'); if (da) da.textContent = attendance;
+    const dil = document.getElementById('detail-instructor-lead'); if (dil) dil.textContent = 'Lead: ' + instructor;
+    const docP = document.getElementById('docPermit'); if (docP) docP.textContent = permit + ' • Verified Online';
+
+    const statusPill = document.getElementById('detail-status-pill');
+    if (statusPill) {
+      if (hoursPct >= 100) {
+        statusPill.textContent = 'Certified / Completed';
+        statusPill.className = 'px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold';
+      } else {
+        statusPill.textContent = 'Active In-Training';
+        statusPill.className = 'px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold';
+      }
+    }
+
+    // Highlight active row
+    const rows = document.querySelectorAll('.student-row');
+    rows.forEach(r => {
+      r.classList.remove('bg-slate-50', 'border-l-4', 'border-slate-900');
+      if (r.innerText.includes(name)) {
+        r.classList.add('bg-slate-50', 'border-l-4', 'border-slate-900');
+      }
+    });
+  }
+
+  function filterStatus(status, btn) {
+    const buttons = document.querySelectorAll('#statusFilterGroup .filter-btn');
+    buttons.forEach(b => {
+      b.className = 'filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors';
+    });
+    if (btn) btn.className = 'filter-btn px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold text-xs whitespace-nowrap shadow-xs';
+
+    const rows = document.querySelectorAll('.student-row');
+    rows.forEach(r => {
+      const rowStatus = r.getAttribute('data-status');
+      if (status === 'all' || rowStatus === status) {
+        r.style.display = '';
+      } else {
+        r.style.display = 'none';
+      }
+    });
+
+    showStudentToast('Roster Filtered', 'Showing ' + status.toUpperCase() + ' records in St. Joseph database.');
+  }
+
+  function filterStudents(val) {
+    const q = (val || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.student-row');
+    rows.forEach(r => {
+      r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  function clearStudentFilters() {
+    const ts = document.getElementById('topStudentSearch'); if (ts) ts.value = '';
+    const ss = document.getElementById('studentTableSearch'); if (ss) ss.value = '';
+    const firstBtn = document.querySelector('#statusFilterGroup .filter-btn');
+    if (firstBtn) filterStatus('all', firstBtn);
+    filterStudents('');
+  }
+
+  function syncLTMSGateway() {
+    showStudentToast('LTO Gateway Synchronized', 'All 148 student driver records verified against regional LTMS database.');
+  }
+
+  function editStudent() {
+    const en = document.getElementById('editNameInput'); if (en) en.value = activeStudent.name;
+    const ep = document.getElementById('editPermitInput'); if (ep) ep.value = activeStudent.permit;
+    const em = document.getElementById('editStudentModal'); if (em) em.classList.remove('hidden');
+  }
+
+  function saveStudentEdit(e) {
+    e.preventDefault();
+    const newName = document.getElementById('editNameInput').value;
+    const newPermit = document.getElementById('editPermitInput').value;
+    const newPkg = document.getElementById('editPkgInput').value;
+
+    activeStudent.name = newName;
+    activeStudent.permit = newPermit;
+    activeStudent.pkg = newPkg;
+
+    const dn = document.getElementById('detail-name'); if (dn) dn.textContent = newName;
+    const dp = document.getElementById('detail-permit'); if (dp) dp.textContent = 'Permit: ' + newPermit;
+    const dpk = document.getElementById('detail-package'); if (dpk) dpk.textContent = newPkg;
+
+    closeStudentModal('editStudentModal');
+    showStudentToast('Profile Updated', newName + ' records saved to registrar database.');
+  }
+
+  function logStudentScore() {
+    const sn = document.getElementById('scoreStudentName'); if (sn) sn.value = activeStudent.name;
+    const sm = document.getElementById('scoreModal'); if (sm) sm.classList.remove('hidden');
+  }
+
+  function saveStudentScore(e) {
+    e.preventDefault();
+    const addHours = document.getElementById('addHoursInput').value;
+    const score = document.getElementById('evalScoreInput').value;
+    const comment = document.getElementById('evalCommentInput').value;
+
+    if (comment) {
+      const df = document.getElementById('detail-feedback'); if (df) df.textContent = '“' + comment + '”';
+    }
+    closeStudentModal('scoreModal');
+    showStudentToast('Evaluation Posted', 'Logged +' + addHours + ' practical hours (Score: ' + score + '/100) for ' + activeStudent.name + '.');
+  }
+
+  function archiveStudent() {
+    if (typeof window !== 'undefined' && typeof window.showConfirmDialog === 'function') {
+      window.showConfirmDialog({
+        title: 'Archive Student Driver Record',
+        message: 'Are you sure you want to archive ' + activeStudent.name + ' (Permit: ' + activeStudent.permit + ')? This will release all assigned scheduled sessions.',
+        badge: 'Irreversible Action',
+        type: 'danger',
+        confirmText: 'Archive Student Record',
+        details: [
+          { label: 'Student ID', value: activeStudent.id },
+          { label: 'Student Name', value: activeStudent.name },
+          { label: 'Assigned Package', value: activeStudent.pkg }
+        ],
+        onConfirm: () => {
+          showStudentToast('Student Archived', activeStudent.name + ' has been moved to archived directory.');
+        }
+      });
+    } else {
+      showStudentToast('Student Archived', activeStudent.name + ' has been moved to archived directory.');
+    }
+  }
+
+  function issueCertificate() {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/dashboard/reports?student=' + encodeURIComponent(activeStudent.name);
+    }
+  }
+
+  function shiftStudentPage(page) {
+    const b1 = document.getElementById('pageBtn1');
+    if (b1) b1.className = page === 1 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';
+    const b2 = document.getElementById('pageBtn2');
+    if (b2) b2.className = page === 2 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';
+    const pcl = document.getElementById('pageCountLabel');
+    if (pcl) pcl.textContent = 'Page ' + page + ' of 2 • 6 Students Listed';
+    showStudentToast('Pagination Switched', 'Now viewing student roster batch ' + page + '.');
+  }
+
+  function closeStudentModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add('hidden');
+  }
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      document.body.removeAttribute('data-print-target');
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    window.showStudentToast = showStudentToast;
+    window.showStudentDetail = showStudentDetail;
+    window.filterStatus = filterStatus;
+    window.filterStudents = filterStudents;
+    window.clearStudentFilters = clearStudentFilters;
+    window.syncLTMSGateway = syncLTMSGateway;
+    window.editStudent = editStudent;
+    window.saveStudentEdit = saveStudentEdit;
+    window.logStudentScore = logStudentScore;
+    window.saveStudentScore = saveStudentScore;
+    window.archiveStudent = archiveStudent;
+    window.issueCertificate = issueCertificate;
+    window.shiftStudentPage = shiftStudentPage;
+    window.closeStudentModal = closeStudentModal;
+
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
   return (
     <>
       
@@ -9,7 +217,7 @@ export default function Students() {
     <div className="flex flex-col">
       {/* Logo Header */}
       <div className="h-16 px-5 border-b border-slate-100 flex items-center gap-3">
-        <img src="../assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
+        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
         <div className="flex flex-col min-w-0">
           <span className="font-display text-xs font-extrabold text-slate-900 tracking-tight truncate">ST. JOSEPH CUPERTINO</span>
           <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider truncate">Driving School • Tagum</span>
@@ -33,41 +241,41 @@ export default function Students() {
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Core Management</span>
         </div>
         <nav className="space-y-1 text-xs">
-          <a href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">dashboard</span>
             Operations Dashboard
-          </a>
-          <a href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">calendar_month</span>
             Scheduling & Dispatch
-          </a>
-          <a href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
+          </Link>
+          <Link href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
             <span className="material-symbols-outlined text-base">school</span>
             Students & Progress
-          </a>
-          <a href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">receipt_long</span>
             Tuition & Payments
-          </a>
-          <a href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">directions_car</span>
             Fleet & Instructors
-          </a>
-          <a href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">verified_user</span>
             Reports & Compliance
-          </a>
+          </Link>
 
           <div className="pt-3 my-2 border-t border-slate-100"></div>
 
-          <a href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">public</span>
             Public Website
-          </a>
-          <a href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
+          </Link>
+          <Link href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">logout</span>
             Sign Out
-          </a>
+          </Link>
         </nav>
       </div>
     </div>
@@ -107,6 +315,11 @@ export default function Students() {
         <span><strong className="text-emerald-700">22</strong> LTO Certified</span>
       </div>
 
+      <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50/80 border border-emerald-200/60 text-xs text-emerald-800 font-medium">
+        <span className="material-symbols-outlined text-sm text-emerald-600">shield_lock</span>
+        <span>RA 10173 Protected</span>
+      </div>
+
       <a href="/" className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors hidden sm:inline-flex items-center gap-1">
         <span className="material-symbols-outlined text-sm">arrow_back</span>
         Public Site
@@ -126,8 +339,8 @@ export default function Students() {
   </header>
 
   {/* Main Content */}
-  <main className="ml-64 pt-16 min-h-screen bg-slate-50 overflow-x-hidden">
-    <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto xl:max-w-none">
+  <main id="main-content" className="ml-64 pt-16 min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="p-6 sm:p-8 pb-32 sm:pb-36 space-y-6 max-w-7xl mx-auto xl:max-w-none">
 
       {/* Header & Top Summary Strip */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -141,23 +354,39 @@ export default function Students() {
           <p className="text-xs text-slate-500 mt-0.5">Real-time competency tracking for Theoretical Driving (TDC) and Practical Driving (PDC) courses.</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button onClick={() => {window.syncLTMSGateway()}} className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs">
-            <span className="material-symbols-outlined text-sm">sync</span>
+        <div className="flex items-center gap-2 no-print">
+          <button
+            type="button"
+            onClick={() => {
+              document.body.setAttribute('data-print-target', 'students');
+              window.print();
+            }}
+            className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+            aria-label="Print official student roster"
+          >
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">print</span>
+            Print Roster
+          </button>
+          <button
+            type="button"
+            onClick={() => {window.syncLTMSGateway()}}
+            className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+          >
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">sync</span>
             Sync LTMS
           </button>
-          <a href="/../portal?tab=enroll" className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs">
-            <span className="material-symbols-outlined text-sm">person_add</span>
+          <a href="/portal?tab=enroll" className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">person_add</span>
             + Register Student
           </a>
         </div>
       </div>
 
       {/* 4 Quick Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 kpi-cards">
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Roster</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Active Roster</span>
             <div className="font-display text-2xl font-extrabold text-slate-900 mt-0.5">148</div>
             <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-0.5 mt-0.5">
               <span className="material-symbols-outlined text-xs">arrow_upward</span> +14 this week
@@ -170,7 +399,7 @@ export default function Students() {
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">In Practical (PDC)</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">In Practical (PDC)</span>
             <div className="font-display text-2xl font-extrabold text-slate-900 mt-0.5">94</div>
             <span className="text-[11px] text-slate-500 mt-0.5">Dual-control fleet active</span>
           </div>
@@ -181,7 +410,7 @@ export default function Students() {
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Awaiting Mock Exam</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Awaiting Mock Exam</span>
             <div className="font-display text-2xl font-extrabold text-slate-900 mt-0.5">32</div>
             <span className="text-[11px] text-amber-600 font-semibold mt-0.5">8 slotted today</span>
           </div>
@@ -192,7 +421,7 @@ export default function Students() {
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">LTO Certified / Grad</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">LTO Certified / Grad</span>
             <div className="font-display text-2xl font-extrabold text-slate-900 mt-0.5">22</div>
             <span className="text-[11px] text-emerald-600 font-semibold mt-0.5">Ready for License</span>
           </div>
@@ -203,18 +432,18 @@ export default function Students() {
       </div>
 
       {/* Filters & Global Search */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="statusFilterGroup">
-          <button onClick={() => {window.filterStatus('all', this)}} className="filter-btn px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold text-xs whitespace-nowrap shadow-xs">
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 action-toolbar">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="statusFilterGroup" role="group" aria-label="Filter students by enrollment status">
+          <button onClick={(e) => {window.filterStatus('all', e.currentTarget)}} className="filter-btn px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold text-xs whitespace-nowrap shadow-xs">
             All Students (148)
           </button>
-          <button onClick={() => {window.filterStatus('training', this)}} className="filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors">
+          <button onClick={(e) => {window.filterStatus('training', e.currentTarget)}} className="filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors">
             In Training (94)
           </button>
-          <button onClick={() => {window.filterStatus('completed', this)}} className="filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors">
+          <button onClick={(e) => {window.filterStatus('completed', e.currentTarget)}} className="filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors">
             Completed (32)
           </button>
-          <button onClick={() => {window.filterStatus('certified', this)}} className="filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors">
+          <button onClick={(e) => {window.filterStatus('certified', e.currentTarget)}} className="filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors">
             Certified (22)
           </button>
         </div>
@@ -222,9 +451,9 @@ export default function Students() {
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-64">
             <span className="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-sm">search</span>
-            <input id="studentTableSearch" onInput={(e) => window.filterStudents(e.target.value)} type="text" placeholder="Filter SP number, name..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
+            <input id="studentTableSearch" aria-label="Search student roster by name or permit" onInput={(e) => window.filterStudents(e.target.value)} type="text" placeholder="Filter SP number, name..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
           </div>
-          <button onClick={() => {window.clearStudentFilters()}} className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center gap-1 transition-colors">
+          <button onClick={() => {window.clearStudentFilters()}} aria-label="Reset roster filters" className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center gap-1 transition-colors">
             <span className="material-symbols-outlined text-sm">refresh</span>
             Reset
           </button>
@@ -235,8 +464,23 @@ export default function Students() {
       <div className="grid grid-cols-1 2xl:grid-cols-12 gap-6 items-start">
         
         {/* Left Master Roster (7 cols) */}
-        <div className="2xl:col-span-7 flex flex-col rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="2xl:col-span-7 flex flex-col rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden printable-records">
+          {/* Printable Official Header */}
+          <div className="print-header hidden pb-3 border-b-2 border-slate-900 mb-4 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display font-extrabold text-base text-slate-900">ST. JOSEPH CUPERTINO DRIVING SCHOOL</h2>
+                <p className="text-xs text-slate-600">Tagum Main Campus • Pioneer Ave, Tagum City • LTO Accreditation No. 11-04-2023</p>
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Official Student Driver Directory & Competency Records</p>
+              </div>
+              <div className="text-right text-xs text-slate-500 font-mono">
+                <p>Term: <strong>AY 2024–2025</strong></p>
+                <p>LTMS Status: <strong>Validated & Synced</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between no-print">
             <div className="flex items-center gap-2">
               <h2 className="font-display text-sm font-bold text-slate-900">Student Registry Roster</h2>
               <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">Active Cohort</span>
@@ -497,7 +741,7 @@ export default function Students() {
           </div>
 
           {/* Pagination */}
-          <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-4">
+          <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-4 no-print">
             <span id="pageCountLabel">Page 1 of 2 • 6 Students Listed</span>
             <div className="flex items-center gap-1">
               <button onClick={() => {window.shiftStudentPage(1)}} className="px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold">Previous</button>
@@ -506,10 +750,22 @@ export default function Students() {
               <button onClick={() => {window.shiftStudentPage(2)}} className="px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold">Next</button>
             </div>
           </div>
+
+          {/* Print Only Footer */}
+          <div className="print-footer hidden pt-4 border-t border-slate-300 mt-4 px-4 text-xs text-slate-600">
+            <div>
+              <p>Generated by: <strong>Maria Elena Santos (Registrar)</strong></p>
+              <p>Verified under Memorandum Circular 2021-2287 Standards</p>
+            </div>
+            <div className="text-right">
+              <p>Official Registrar Directory Report</p>
+              <p>St. Joseph Cupertino Driving School — Tagum Campus</p>
+            </div>
+          </div>
         </div>
 
         {/* Right Student Detail Dossier (5 cols) */}
-        <div className="2xl:col-span-5 flex flex-col gap-4 sticky top-20">
+        <div className="2xl:col-span-5 flex flex-col gap-4 sticky top-20 detail-drawer">
           
           {/* Focus Student Card */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-5">
@@ -617,13 +873,26 @@ export default function Students() {
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-2 pt-1">
-              <button onClick={() => {window.issueCertificate()}} className="py-2 px-3 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-xs">
+              <button onClick={() => {window.issueCertificate()}} className="py-2 px-3 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                 <span className="material-symbols-outlined text-sm">workspace_premium</span>
                 Issue Certificate
               </button>
-              <button onClick={() => {window.logStudentScore()}} className="py-2 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors">
+              <button onClick={() => {window.logStudentScore()}} className="py-2 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                 <span className="material-symbols-outlined text-sm">assignment_add</span>
                 Log Score
+              </button>
+            </div>
+
+            {/* Danger Activity: Archive/Delete Record */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => {window.archiveStudent()}}
+                className="w-full py-2 px-3 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none"
+                aria-label="Archive or delete student record"
+              >
+                <span className="material-symbols-outlined text-sm">archive</span>
+                Archive / Delete Student Record
               </button>
             </div>
 
@@ -637,26 +906,26 @@ export default function Students() {
   </main>
 
   {/* Modal: Edit Student Profile */}
-  <div id="editStudentModal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="editStudentModal" role="dialog" aria-modal="true" aria-labelledby="editStudentModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 className="font-display font-bold text-sm text-slate-900">Edit Student Record</h3>
-        <button onClick={() => {window.closeStudentModal('editStudentModal')}} className="text-slate-400 hover:text-slate-900">
+        <h3 id="editStudentModalTitle" className="font-display font-bold text-sm text-slate-900">Edit Student Record</h3>
+        <button onClick={() => {window.closeStudentModal('editStudentModal')}} aria-label="Close edit modal" className="text-slate-400 hover:text-slate-900">
           <span className="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
 
       <form onSubmit={(event) => { window.saveStudentEdit(event) }} className="space-y-3 text-xs">
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Student Full Name</label>
+          <label className="block font-bold text-slate-700 mb-1" htmlFor="editNameInput">Student Full Name</label>
           <input type="text" id="editNameInput" required className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Permit Number</label>
+          <label className="block font-bold text-slate-700 mb-1" htmlFor="editPermitInput">Permit Number</label>
           <input type="text" id="editPermitInput" required className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Assigned Course Package</label>
+          <label className="block font-bold text-slate-700 mb-1" htmlFor="editPkgInput">Assigned Course Package</label>
           <select id="editPkgInput" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option>PDC Manual 15-Hour Deluxe</option>
             <option>PDC Automatic Sedan 8-Hour</option>
@@ -674,32 +943,32 @@ export default function Students() {
   </div>
 
   {/* Modal: Log Competency Score */}
-  <div id="scoreModal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="scoreModal" role="dialog" aria-modal="true" aria-labelledby="scoreModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 className="font-display font-bold text-sm text-slate-900">Log In-Car Practical Evaluation</h3>
-        <button onClick={() => {window.closeStudentModal('scoreModal')}} className="text-slate-400 hover:text-slate-900">
+        <h3 id="scoreModalTitle" className="font-display font-bold text-sm text-slate-900">Log In-Car Practical Evaluation</h3>
+        <button onClick={() => {window.closeStudentModal('scoreModal')}} aria-label="Close score modal" className="text-slate-400 hover:text-slate-900">
           <span className="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
 
       <form onSubmit={(event) => { window.saveStudentScore(event) }} className="space-y-3 text-xs">
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Student</label>
-          <input type="text" id="scoreStudentName" readonly className="w-full px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-600" />
+          <label className="block font-bold text-slate-700 mb-1" htmlFor="scoreStudentName">Student</label>
+          <input type="text" id="scoreStudentName" readOnly className="w-full px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-600" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Practical Hours (+)</label>
+            <label className="block font-bold text-slate-700 mb-1" htmlFor="addHoursInput">Practical Hours (+)</label>
             <input type="number" id="addHoursInput" min="1" max="5" defaultValue="2" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
           </div>
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Score (out of 100)</label>
+            <label className="block font-bold text-slate-700 mb-1" htmlFor="evalScoreInput">Score (out of 100)</label>
             <input type="number" id="evalScoreInput" min="50" max="100" defaultValue="95" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
           </div>
         </div>
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Instructor Comments</label>
+          <label className="block font-bold text-slate-700 mb-1" htmlFor="evalCommentInput">Instructor Comments</label>
           <textarea id="evalCommentInput" rows="3" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" placeholder="Smooth clutch control, accurate hand-over-hand turning..."></textarea>
         </div>
         <div className="pt-2 flex justify-end gap-2">
@@ -711,16 +980,13 @@ export default function Students() {
   </div>
 
   {/* Toast Notification */}
-  <div id="studentToast" className="fixed bottom-6 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
+  <div id="studentToast" role="status" aria-live="polite" className="fixed bottom-20 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
     <span className="material-symbols-outlined text-emerald-400">task_alt</span>
     <div className="flex flex-col text-xs">
       <span className="font-bold" id="studentToastTitle">Record Synchronized</span>
       <span className="text-slate-300" id="studentToastMsg">Notification details</span>
     </div>
   </div>
-
-  <script dangerouslySetInnerHTML={{ __html: "\n    let activeStudent = {\n      name: 'Gabriel Santos',\n      id: 'SJD-2024-089',\n      permit: 'SP-11-2024-009284',\n      pkg: 'PDC Manual 15-Hour Deluxe',\n      hours: '12 / 15 hrs',\n      hoursPct: 80,\n      tdcScore: '96%',\n      attendance: '100%',\n      instructor: 'Roberto Aquino'\n    };\n\n    function showStudentToast(title, msg) {\n      const toast = document.getElementById('studentToast');\n      document.getElementById('studentToastTitle').textContent = title;\n      document.getElementById('studentToastMsg').textContent = msg;\n      toast.classList.remove('translate-y-32');\n      setTimeout(() => { toast.classList.add('translate-y-32'); }, 4000);\n    }\n\n    function showStudentDetail(name, id, permit, pkg, hours, hoursPct, tdcScore, attendance, instructor, paymentStatus, receiptNo, initial) {\n      activeStudent = { name, id, permit, pkg, hours, hoursPct, tdcScore, attendance, instructor };\n      document.getElementById('detail-name').textContent = name;\n      document.getElementById('detail-initial').textContent = initial;\n      document.getElementById('detail-package').textContent = pkg;\n      document.getElementById('detail-permit').textContent = 'Permit: ' + permit;\n      document.getElementById('detail-hours').textContent = hours;\n      document.getElementById('detail-hours-pct').textContent = hoursPct + '% Done';\n      document.getElementById('detail-tdc').textContent = tdcScore;\n      document.getElementById('detail-attendance').textContent = attendance;\n      document.getElementById('detail-instructor-lead').textContent = 'Lead: ' + instructor;\n      document.getElementById('docPermit').textContent = permit + ' • Verified Online';\n\n      const statusPill = document.getElementById('detail-status-pill');\n      if (hoursPct >= 100) {\n        statusPill.textContent = 'Certified / Completed';\n        statusPill.className = 'px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold';\n      } else {\n        statusPill.textContent = 'Active In-Training';\n        statusPill.className = 'px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold';\n      }\n\n      // Highlight active row\n      const rows = document.querySelectorAll('.student-row');\n      rows.forEach(r => {\n        r.classList.remove('bg-slate-50', 'border-l-4', 'border-slate-900');\n        if (r.innerText.includes(name)) {\n          r.classList.add('bg-slate-50', 'border-l-4', 'border-slate-900');\n        }\n      });\n    }\n\n    function filterStatus(status, btn) {\n      const buttons = document.querySelectorAll('#statusFilterGroup .filter-btn');\n      buttons.forEach(b => {\n        b.className = 'filter-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium text-xs whitespace-nowrap transition-colors';\n      });\n      btn.className = 'filter-btn px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold text-xs whitespace-nowrap shadow-xs';\n\n      const rows = document.querySelectorAll('.student-row');\n      rows.forEach(r => {\n        const rowStatus = r.getAttribute('data-status');\n        if (status === 'all' || rowStatus === status) {\n          r.style.display = '';\n        } else {\n          r.style.display = 'none';\n        }\n      });\n\n      showStudentToast('Roster Filtered', `Showing ${status.toUpperCase()} records in St. Joseph database.`);\n    }\n\n    function filterStudents(val) {\n      const q = val.toLowerCase().trim();\n      const rows = document.querySelectorAll('.student-row');\n      rows.forEach(r => {\n        r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';\n      });\n    }\n\n    function clearStudentFilters() {\n      document.getElementById('topStudentSearch').value = '';\n      document.getElementById('studentTableSearch').value = '';\n      const firstBtn = document.querySelector('#statusFilterGroup .filter-btn');\n      if (firstBtn) filterStatus('all', firstBtn);\n      filterStudents('');\n    }\n\n    function syncLTMSGateway() {\n      showStudentToast('LTO Gateway Synchronized', 'All 148 student driver records verified against regional LTMS database.');\n    }\n\n    function editStudent() {\n      document.getElementById('editNameInput').value = activeStudent.name;\n      document.getElementById('editPermitInput').value = activeStudent.permit;\n      document.getElementById('editStudentModal').classList.remove('hidden');\n    }\n\n    function saveStudentEdit(e) {\n      e.preventDefault();\n      const newName = document.getElementById('editNameInput').value;\n      const newPermit = document.getElementById('editPermitInput').value;\n      const newPkg = document.getElementById('editPkgInput').value;\n      \n      activeStudent.name = newName;\n      activeStudent.permit = newPermit;\n      activeStudent.pkg = newPkg;\n\n      document.getElementById('detail-name').textContent = newName;\n      document.getElementById('detail-permit').textContent = 'Permit: ' + newPermit;\n      document.getElementById('detail-package').textContent = newPkg;\n\n      closeStudentModal('editStudentModal');\n      showStudentToast('Profile Updated', `${newName}'s records saved to registrar database.`);\n    }\n\n    function logStudentScore() {\n      document.getElementById('scoreStudentName').value = activeStudent.name;\n      document.getElementById('scoreModal').classList.remove('hidden');\n    }\n\n    function saveStudentScore(e) {\n      e.preventDefault();\n      const addHours = document.getElementById('addHoursInput').value;\n      const score = document.getElementById('evalScoreInput').value;\n      const comment = document.getElementById('evalCommentInput').value;\n\n      if (comment) {\n        document.getElementById('detail-feedback').textContent = `“${comment}”`;\n      }\n\n      closeStudentModal('scoreModal');\n      showStudentToast('Evaluation Posted', `Logged +${addHours} practical hours (Score: ${score}/100) for ${activeStudent.name}.`);\n    }\n\n    function issueCertificate() {\n      window.location.href = `/dashboard/reports?student=${encodeURIComponent(activeStudent.name)}`;\n    }\n\n    function shiftStudentPage(page) {\n      document.getElementById('pageBtn1').className = page === 1 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';\n      document.getElementById('pageBtn2').className = page === 2 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';\n      document.getElementById('pageCountLabel').textContent = `Page ${page} of 2 • 6 Students Listed`;\n      showStudentToast('Pagination Switched', `Now viewing student roster batch ${page}.`);\n    }\n\n    function closeStudentModal(id) {\n      document.getElementById(id).classList.add('hidden');\n    }\n  " }} />
-
 
     </>
   );

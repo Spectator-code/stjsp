@@ -1,5 +1,165 @@
 "use client";
+import { useEffect } from "react";
+import Link from "next/link";
+
 export default function Fleet() {
+  function showFleetToast(title, msg) {
+    const toast = document.getElementById('fleetToast');
+    if (!toast) return;
+    const tt = document.getElementById('fleetToastTitle');
+    if (tt) tt.textContent = title;
+    const tm = document.getElementById('fleetToastMsg');
+    if (tm) tm.textContent = msg;
+    toast.classList.remove('translate-y-32');
+    setTimeout(() => { toast.classList.add('translate-y-32'); }, 4000);
+  }
+
+  function openVehicleModal() {
+    const vm = document.getElementById('vehicleModal');
+    if (vm) vm.classList.remove('hidden');
+  }
+  function closeVehicleModal() {
+    const vm = document.getElementById('vehicleModal');
+    if (vm) vm.classList.add('hidden');
+  }
+  
+  function openMaintenanceModal(plate) { 
+    if (plate) {
+      const sel = document.getElementById('pmsVehicle');
+      if (sel) {
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].text.includes(plate)) {
+            sel.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+    const mm = document.getElementById('maintenanceModal');
+    if (mm) mm.classList.remove('hidden'); 
+  }
+  function closeMaintenanceModal() {
+    const mm = document.getElementById('maintenanceModal');
+    if (mm) mm.classList.add('hidden');
+  }
+
+  function openInstructorModal() {
+    const im = document.getElementById('instructorModal');
+    if (im) im.classList.remove('hidden');
+  }
+  function closeInstructorModal() {
+    const im = document.getElementById('instructorModal');
+    if (im) im.classList.add('hidden');
+  }
+
+  function handleNewVehicle(e) {
+    e.preventDefault();
+    const mEl = document.getElementById('newModel');
+    const pEl = document.getElementById('newPlate');
+    const model = mEl ? mEl.value : '';
+    const plate = pEl ? pEl.value : '';
+
+    closeVehicleModal();
+    showFleetToast('Vehicle Registered', model + ' (' + plate + ') added to Tagum campus active inventory.');
+  }
+
+  function handleMaintenanceSubmit(e) {
+    e.preventDefault();
+    const vEl = document.getElementById('pmsVehicle');
+    const v = vEl ? vEl.value : '';
+
+    closeMaintenanceModal();
+    showFleetToast('PMS Order Dispatched', 'Maintenance scheduled for ' + v + '. Flagged for technician check.');
+  }
+
+  function handleNewInstructor(e) {
+    e.preventDefault();
+    const nEl = document.getElementById('instName');
+    const cEl = document.getElementById('instCert');
+    const name = nEl ? nEl.value : '';
+    const cert = cEl ? cEl.value : '';
+
+    closeInstructorModal();
+    showFleetToast('Faculty Accredited', name + ' (' + cert + ') added to official LTO-accredited faculty.');
+  }
+
+  function decommissionVehicle(model, plate) {
+    if (typeof window !== 'undefined' && window.showConfirmDialog) {
+      window.showConfirmDialog({
+        title: 'Decommission Training Vehicle',
+        message: 'Are you sure you want to permanently decommission this vehicle? This will immediately remove it from dispatch availability and notify the LTO regional office.',
+        badge: 'Permanent Decommission',
+        type: 'danger',
+        confirmText: 'Decommission Unit',
+        details: [
+          { label: 'Vehicle Model', value: model },
+          { label: 'Plate Number', value: plate },
+          { label: 'Action Warning', value: 'Cannot be undone once archived' }
+        ],
+        onConfirm: () => {
+          showFleetToast('Vehicle Decommissioned', model + ' (' + plate + ') has been retired from active training.');
+        }
+      });
+    } else {
+      showFleetToast('Vehicle Decommissioned', model + ' (' + plate + ') has been retired from active training.');
+    }
+  }
+
+  function shiftFleetPage(page) {
+    const b1 = document.getElementById('fleetPageBtn1');
+    if (b1) b1.className = page === 1 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';
+    const b2 = document.getElementById('fleetPageBtn2');
+    if (b2) b2.className = page === 2 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';
+    const fpl = document.getElementById('fleetPageLabel');
+    if (fpl) fpl.textContent = 'Showing ' + (page === 1 ? '4 of 14' : '10 of 14') + ' dual-control training units • Tagum Campus';
+    showFleetToast('Fleet View Shifted', 'Viewing training units page ' + page + '.');
+  }
+
+  function filterFleetTable() {
+    const searchInput = document.getElementById('fleetSearch');
+    const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const typeFilter = document.getElementById('vehicleTypeFilter');
+    const selectedType = typeFilter ? typeFilter.value : 'all';
+
+    const rows = document.querySelectorAll('#fleetTableBody tr');
+    rows.forEach(r => {
+      const text = r.innerText.toLowerCase();
+      const matchesSearch = !q || text.includes(q);
+      let matchesType = true;
+      if (selectedType === 'sedan') {
+        matchesType = text.includes('sedan') || text.includes('vios') || text.includes('wigo') || text.includes('accent') || text.includes('suv') || text.includes('avanza') || text.includes('hilux');
+      } else if (selectedType === 'moto') {
+        matchesType = text.includes('motorcycle') || text.includes('scooter') || text.includes('barako') || text.includes('click') || text.includes('honda') || text.includes('kawasaki');
+      }
+      r.style.display = matchesSearch && matchesType ? '' : 'none';
+    });
+  }
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      document.body.removeAttribute('data-print-target');
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    window.showFleetToast = showFleetToast;
+    window.openVehicleModal = openVehicleModal;
+    window.closeVehicleModal = closeVehicleModal;
+    window.openMaintenanceModal = openMaintenanceModal;
+    window.closeMaintenanceModal = closeMaintenanceModal;
+    window.openInstructorModal = openInstructorModal;
+    window.closeInstructorModal = closeInstructorModal;
+    window.handleNewVehicle = handleNewVehicle;
+    window.handleMaintenanceSubmit = handleMaintenanceSubmit;
+    window.handleNewInstructor = handleNewInstructor;
+    window.decommissionVehicle = decommissionVehicle;
+    window.shiftFleetPage = shiftFleetPage;
+    window.filterFleetTable = filterFleetTable;
+
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
+
   return (
     <>
       
@@ -9,7 +169,7 @@ export default function Fleet() {
     <div className="flex flex-col">
       {/* Logo Header */}
       <div className="h-16 px-5 border-b border-slate-100 flex items-center gap-3">
-        <img src="../assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
+        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
         <div className="flex flex-col min-w-0">
           <span className="font-display text-xs font-extrabold text-slate-900 tracking-tight truncate">ST. JOSEPH CUPERTINO</span>
           <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider truncate">Driving School • Tagum</span>
@@ -33,41 +193,41 @@ export default function Fleet() {
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Core Management</span>
         </div>
         <nav className="space-y-1 text-xs">
-          <a href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">dashboard</span>
             Operations Dashboard
-          </a>
-          <a href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">calendar_month</span>
             Scheduling & Dispatch
-          </a>
-          <a href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">school</span>
             Students & Progress
-          </a>
-          <a href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">receipt_long</span>
             Tuition & Payments
-          </a>
-          <a href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
+          </Link>
+          <Link href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
             <span className="material-symbols-outlined text-base">directions_car</span>
             Fleet & Instructors
-          </a>
-          <a href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">verified_user</span>
             Reports & Compliance
-          </a>
+          </Link>
 
           <div className="pt-3 my-2 border-t border-slate-100"></div>
 
-          <a href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">public</span>
             Public Website
-          </a>
-          <a href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
+          </Link>
+          <Link href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">logout</span>
             Sign Out
-          </a>
+          </Link>
         </nav>
       </div>
     </div>
@@ -95,7 +255,7 @@ export default function Fleet() {
 
       <div className="relative hidden lg:block w-72">
         <span className="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-sm">search</span>
-        <input id="fleetSearch" onInput={(e) => { window.filterFleetTable() }} type="text" placeholder="Search vehicle plate, model, instructor..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" />
+        <input id="fleetSearch" onInput={(e) => { if (typeof window !== 'undefined' && typeof window.filterFleetTable === 'function') window.filterFleetTable() }} type="text" placeholder="Search vehicle plate, model, instructor..." className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" />
       </div>
     </div>
 
@@ -105,6 +265,11 @@ export default function Fleet() {
         <span>Fleet: <strong className="text-slate-900">12/14</strong> Ready</span>
         <span className="text-slate-300">•</span>
         <span><strong className="text-slate-900">8</strong> Instructors Certified</span>
+      </div>
+
+      <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50/80 border border-emerald-200/60 text-xs text-emerald-800 font-medium">
+        <span className="material-symbols-outlined text-sm text-emerald-600">shield_lock</span>
+        <span>RA 10173 Protected</span>
       </div>
 
       <a href="/" className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors hidden sm:inline-flex items-center gap-1">
@@ -126,8 +291,8 @@ export default function Fleet() {
   </header>
 
   {/* Main Content */}
-  <main className="ml-64 pt-16 min-h-screen bg-slate-50 overflow-x-hidden">
-    <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto xl:max-w-none">
+  <main id="main-content" className="ml-64 pt-16 min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="p-6 sm:p-8 pb-32 sm:pb-36 space-y-6 max-w-7xl mx-auto xl:max-w-none">
 
       {/* Action Banner */}
       <section className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
@@ -144,16 +309,24 @@ export default function Fleet() {
           <p className="text-xs text-slate-500 mt-0.5">Vehicle inspection logs, dual-control mechanisms, preventive maintenance schedule, and accredited instructor roster.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => {window.openVehicleModal()}} className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2 no-print">
+          <button onClick={() => {window.openVehicleModal()}} className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
             <span className="material-symbols-outlined text-sm">add_circle</span>
             + Add Vehicle
           </button>
-          <button onClick={() => {window.openMaintenanceModal()}} className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs">
-            <span className="material-symbols-outlined text-sm">print</span>
+          <button onClick={() => {window.openMaintenanceModal()}} className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
+            <span className="material-symbols-outlined text-sm">car_repair</span>
             Log Maintenance
           </button>
-          <button onClick={() => {window.print()}} className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs">
+          <button
+            type="button"
+            onClick={() => {
+              document.body.setAttribute('data-print-target', 'fleet');
+              window.print();
+            }}
+            className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+            aria-label="Print training fleet roster"
+          >
             <span className="material-symbols-outlined text-sm">print</span>
             Print Roster
           </button>
@@ -161,7 +334,7 @@ export default function Fleet() {
       </section>
 
       {/* 4 Bento KPI Metric Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 kpi-cards">
         
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-start justify-between">
@@ -249,8 +422,23 @@ export default function Fleet() {
       </section>
 
       {/* Vehicle Registration & Inventory Table */}
-      <section className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <section className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden printable-records">
+        {/* Printable Official Header */}
+        <div className="print-header hidden pb-3 border-b-2 border-slate-900 mb-4 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display font-extrabold text-base text-slate-900">ST. JOSEPH CUPERTINO DRIVING SCHOOL</h2>
+              <p className="text-xs text-slate-600">Tagum Main Campus • Pioneer Ave, Tagum City • LTO Accreditation No. 11-04-2023</p>
+              <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Official Training Fleet Inventory & Dual-Brake Registry</p>
+            </div>
+            <div className="text-right text-xs text-slate-500 font-mono">
+              <p>Fleet Count: <strong>14 Units</strong></p>
+              <p>Safety Audit: <strong>100% Passed</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 no-print">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-base font-bold text-slate-900">Active Vehicle Inventory & Dual-Control Status</h2>
@@ -260,12 +448,22 @@ export default function Fleet() {
           </div>
 
           <div className="flex items-center gap-2">
-            <select id="vehicleTypeFilter" onChange={() => {filterFleetTable()}} className="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-medium">
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-sm">search</span>
+              <input
+                id="fleetSearch"
+                aria-label="Search fleet vehicles"
+                onInput={() => { if (typeof window !== 'undefined' && window.filterFleetTable) window.filterFleetTable(); }}
+                type="text"
+                placeholder="Search plate, model..."
+                className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
+              />
+            </div>
+            <select id="vehicleTypeFilter" aria-label="Filter vehicle types" onChange={() => { if (typeof window !== 'undefined' && window.filterFleetTable) window.filterFleetTable(); }} className="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-medium">
               <option value="all">All Vehicle Types</option>
               <option value="sedan">Sedans / SUVs (Code B)</option>
               <option value="moto">Motorcycles (Code A)</option>
             </select>
-            
           </div>
         </div>
 
@@ -277,7 +475,7 @@ export default function Fleet() {
                 <th className="py-3 px-4 whitespace-nowrap">Transmission</th>
                 <th className="py-3 px-4 whitespace-nowrap">Dual-Control Mechanism</th>
                 <th className="py-3 px-4 whitespace-nowrap">Primary Instructor</th>
-
+                <th className="py-3 px-4 text-right whitespace-nowrap no-print-col">Action</th>
               </tr>
             </thead>
             <tbody id="fleetTableBody" className="divide-y divide-slate-100">
@@ -308,7 +506,16 @@ export default function Fleet() {
                     </div>
                   </div>
                 </td>
-
+                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button type="button" onClick={() => {window.openMaintenanceModal('ABC-4291')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
+                      PMS
+                    </button>
+                    <button type="button" onClick={() => {window.decommissionVehicle('Toyota Vios #01', 'ABC-4291')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Toyota Vios #01">
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </td>
               </tr>
 
               {/* Vehicle 2 */}
@@ -337,7 +544,16 @@ export default function Fleet() {
                     </div>
                   </div>
                 </td>
-
+                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button type="button" onClick={() => {window.openMaintenanceModal('LAX-4192')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
+                      PMS
+                    </button>
+                    <button type="button" onClick={() => {window.decommissionVehicle('Toyota Vios #02', 'LAX-4192')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Toyota Vios #02">
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </td>
               </tr>
 
               {/* Vehicle 3: Toyota Wigo (In PMS) */}
@@ -366,7 +582,16 @@ export default function Fleet() {
                     </div>
                   </div>
                 </td>
-
+                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button type="button" onClick={() => {window.openMaintenanceModal('ZAA-8120')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
+                      PMS
+                    </button>
+                    <button type="button" onClick={() => {window.decommissionVehicle('Toyota Wigo #02', 'ZAA-8120')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Toyota Wigo #02">
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </td>
               </tr>
 
               {/* Vehicle 4: Honda Click Motorcycle */}
@@ -395,18 +620,39 @@ export default function Fleet() {
                     </div>
                   </div>
                 </td>
-
+                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button type="button" onClick={() => {window.openMaintenanceModal('MC-9941')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
+                      PMS
+                    </button>
+                    <button type="button" onClick={() => {window.decommissionVehicle('Honda Click 125i #01', 'MC-9941')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Honda Click 125i #01">
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </td>
               </tr>
 
             </tbody>
           </table>
         </div>
 
-        <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-4">
+        <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-4 no-print">
           <span id="fleetPageLabel">Showing 4 of 14 dual-control training units • Tagum Campus</span>
           <div className="flex items-center gap-1">
             <button onClick={() => {window.shiftFleetPage(1)}} id="fleetPageBtn1" className="px-2 py-1 rounded bg-slate-900 text-white font-semibold">1</button>
             <button onClick={() => {window.shiftFleetPage(2)}} id="fleetPageBtn2" className="px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold">2</button>
+          </div>
+        </div>
+
+        {/* Print Only Footer */}
+        <div className="print-footer hidden pt-4 border-t border-slate-300 mt-4 px-4 text-xs text-slate-600">
+          <div>
+            <p>Fleet Inspection Certified by: <strong>Safety Officer Allan Garcia</strong></p>
+            <p>LTO Accreditation Certificate No. DS-R11-2021-089</p>
+          </div>
+          <div className="text-right">
+            <p>Official Fleet & Instructor Compliance Roster</p>
+            <p>St. Joseph Cupertino Driving School — Tagum Main Campus</p>
           </div>
         </div>
       </section>
@@ -493,32 +739,32 @@ export default function Fleet() {
   </main>
 
   {/* Modal: Add New Vehicle */}
-  <div id="vehicleModal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="vehicleModal" role="dialog" aria-modal="true" aria-labelledby="vehicleModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 className="font-display font-bold text-sm text-slate-900">Register New Training Vehicle</h3>
-        <button onClick={() => {window.closeVehicleModal()}} className="text-slate-400 hover:text-slate-900"><span className="material-symbols-outlined text-lg">close</span></button>
+        <h3 id="vehicleModalTitle" className="font-display font-bold text-sm text-slate-900">Register New Training Vehicle</h3>
+        <button onClick={() => {window.closeVehicleModal()}} aria-label="Close vehicle registration modal" className="text-slate-400 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none rounded"><span className="material-symbols-outlined text-lg">close</span></button>
       </div>
 
       <form onSubmit={(event) => { window.handleNewVehicle(event) }} className="space-y-3 text-xs">
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Vehicle Make & Model</label>
+          <label htmlFor="newModel" className="block font-bold mb-1 text-slate-700">Vehicle Make & Model</label>
           <input type="text" id="newModel" required placeholder="e.g. Toyota Vios 1.3 XE" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Plate Number</label>
+          <label htmlFor="newPlate" className="block font-bold mb-1 text-slate-700">Plate Number</label>
           <input type="text" id="newPlate" required placeholder="e.g. NAK-1928" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block font-bold mb-1 text-slate-700">Transmission</label>
+            <label htmlFor="newTrans" className="block font-bold mb-1 text-slate-700">Transmission</label>
             <select id="newTrans" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
               <option>Manual (MT)</option>
               <option>Automatic (AT/CVT)</option>
             </select>
           </div>
           <div>
-            <label className="block font-bold mb-1 text-slate-700">Dual Control</label>
+            <label htmlFor="newDual" className="block font-bold mb-1 text-slate-700">Dual Control</label>
             <select id="newDual" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
               <option>Dual Brake & Clutch</option>
               <option>Auxiliary Brake Pedal</option>
@@ -526,8 +772,8 @@ export default function Fleet() {
           </div>
         </div>
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Assign Instructor</label>
-          <select className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+          <label htmlFor="newInstructorAssign" className="block font-bold mb-1 text-slate-700">Assign Instructor</label>
+          <select id="newInstructorAssign" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option>Engr. Roberto Dalisay</option>
             <option>Danilo Reyes</option>
             <option>Grace Mendoza</option>
@@ -535,24 +781,24 @@ export default function Fleet() {
           </select>
         </div>
         <div className="pt-2 flex justify-end gap-2">
-          <button type="button" onClick={() => {window.closeVehicleModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
-          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors shadow-xs">Save Vehicle</button>
+          <button type="button" onClick={() => {window.closeVehicleModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Cancel</button>
+          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Save Vehicle</button>
         </div>
       </form>
     </div>
   </div>
 
   {/* Modal: Log Maintenance */}
-  <div id="maintenanceModal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="maintenanceModal" role="dialog" aria-modal="true" aria-labelledby="maintenanceModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 className="font-display font-bold text-sm text-slate-900">Log Preventive Maintenance (PMS)</h3>
-        <button onClick={() => {window.closeMaintenanceModal()}} className="text-slate-400 hover:text-slate-900"><span className="material-symbols-outlined text-lg">close</span></button>
+        <h3 id="maintenanceModalTitle" className="font-display font-bold text-sm text-slate-900">Log Preventive Maintenance (PMS)</h3>
+        <button onClick={() => {window.closeMaintenanceModal()}} aria-label="Close PMS modal" className="text-slate-400 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none rounded"><span className="material-symbols-outlined text-lg">close</span></button>
       </div>
 
       <form onSubmit={(event) => { window.handleMaintenanceSubmit(event) }} className="space-y-3 text-xs">
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Select Vehicle</label>
+          <label htmlFor="pmsVehicle" className="block font-bold mb-1 text-slate-700">Select Vehicle</label>
           <select id="pmsVehicle" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option>Toyota Wigo #02 (ZAA-8120)</option>
             <option>Toyota Vios #01 (ABC-4291)</option>
@@ -561,49 +807,49 @@ export default function Fleet() {
           </select>
         </div>
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Service Type</label>
-          <select className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+          <label htmlFor="pmsServiceType" className="block font-bold mb-1 text-slate-700">Service Type</label>
+          <select id="pmsServiceType" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option>Dual Brake Tension & Cable Replacement</option>
             <option>10,000 km PMS Check (Oil, Filters, Brakes)</option>
             <option>Tire Alignment & Tread Depth Inspection</option>
           </select>
         </div>
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Service Bay / Center</label>
-          <input type="text" defaultValue="Tagum AutoCare Service Center" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
+          <label htmlFor="pmsBay" className="block font-bold mb-1 text-slate-700">Service Bay / Center</label>
+          <input type="text" id="pmsBay" defaultValue="Tagum AutoCare Service Center" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Technician Notes</label>
-          <textarea rows="2" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" placeholder="Brake pad replacement and cable check..."></textarea>
+          <label htmlFor="pmsNotes" className="block font-bold mb-1 text-slate-700">Technician Notes</label>
+          <textarea id="pmsNotes" rows="2" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" placeholder="Brake pad replacement and cable check..."></textarea>
         </div>
         <div className="pt-2 flex justify-end gap-2">
-          <button type="button" onClick={() => {window.closeMaintenanceModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
-          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors shadow-xs">Submit Order</button>
+          <button type="button" onClick={() => {window.closeMaintenanceModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Cancel</button>
+          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Submit Order</button>
         </div>
       </form>
     </div>
   </div>
 
   {/* Modal: Register New Instructor */}
-  <div id="instructorModal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="instructorModal" role="dialog" aria-modal="true" aria-labelledby="instructorModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 className="font-display font-bold text-sm text-slate-900">Register LTO-Accredited Instructor</h3>
-        <button onClick={() => {window.closeInstructorModal()}} className="text-slate-400 hover:text-slate-900"><span className="material-symbols-outlined text-lg">close</span></button>
+        <h3 id="instructorModalTitle" className="font-display font-bold text-sm text-slate-900">Register LTO-Accredited Instructor</h3>
+        <button onClick={() => {window.closeInstructorModal()}} aria-label="Close instructor registration modal" className="text-slate-400 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none rounded"><span className="material-symbols-outlined text-lg">close</span></button>
       </div>
 
       <form onSubmit={(event) => { window.handleNewInstructor(event) }} className="space-y-3 text-xs">
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Instructor Full Name</label>
+          <label htmlFor="instName" className="block font-bold mb-1 text-slate-700">Instructor Full Name</label>
           <input type="text" id="instName" required placeholder="e.g. Manuel Roxas" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div>
-          <label className="block font-bold mb-1 text-slate-700">LTO Instructor Certificate ID</label>
+          <label htmlFor="instCert" className="block font-bold mb-1 text-slate-700">LTO Instructor Certificate ID</label>
           <input type="text" id="instCert" required placeholder="e.g. INST-2024-512" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block font-bold mb-1 text-slate-700">Instruction Field</label>
+            <label htmlFor="instField" className="block font-bold mb-1 text-slate-700">Instruction Field</label>
             <select id="instField" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
               <option>Practical (PDC Car)</option>
               <option>Practical (PDC Motorcycle)</option>
@@ -611,7 +857,7 @@ export default function Fleet() {
             </select>
           </div>
           <div>
-            <label className="block font-bold mb-1 text-slate-700">Duty Assignment</label>
+            <label htmlFor="instDuty" className="block font-bold mb-1 text-slate-700">Duty Assignment</label>
             <select id="instDuty" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
               <option>On Field (Highway)</option>
               <option>Classroom Multimedia</option>
@@ -620,7 +866,7 @@ export default function Fleet() {
           </div>
         </div>
         <div>
-          <label className="block font-bold mb-1 text-slate-700">Assigned Primary Unit</label>
+          <label htmlFor="instUnit" className="block font-bold mb-1 text-slate-700">Assigned Primary Unit</label>
           <select id="instUnit" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option>Toyota Vios #01 (MT - ABC-4291)</option>
             <option>Toyota Vios #02 (AT - LAX-4192)</option>
@@ -629,25 +875,20 @@ export default function Fleet() {
           </select>
         </div>
         <div className="pt-2 flex justify-end gap-2">
-          <button type="button" onClick={() => {window.closeInstructorModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
-          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors shadow-xs">Accredit Faculty</button>
+          <button type="button" onClick={() => {window.closeInstructorModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Cancel</button>
+          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Accredit Faculty</button>
         </div>
       </form>
     </div>
   </div>
 
   {/* Toast Notification */}
-  <div id="fleetToast" className="fixed bottom-6 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
+  <div id="fleetToast" role="status" aria-live="polite" className="fixed bottom-20 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
     <span className="material-symbols-outlined text-emerald-400">task_alt</span>
     <div className="flex flex-col text-xs">
       <span className="font-bold" id="fleetToastTitle">Fleet Updated</span>
-      <span className="text-slate-300" id="fleetToastMsg">Details logged</span>
     </div>
   </div>
-
-  <script dangerouslySetInnerHTML={{ __html: "\n    function showFleetToast(title, msg) {\n      const toast = document.getElementById('fleetToast');\n      document.getElementById('fleetToastTitle').textContent = title;\n      document.getElementById('fleetToastMsg').textContent = msg;\n      toast.classList.remove('translate-y-32');\n      setTimeout(() => { toast.classList.add('translate-y-32'); }, 4000);\n    }\n\n    function openVehicleModal() { document.getElementById('vehicleModal').classList.remove('hidden'); }\n    function closeVehicleModal() { document.getElementById('vehicleModal').classList.add('hidden'); }\n    \n    function openMaintenanceModal(plate) { \n      if (plate) document.getElementById('pmsVehicle').value = `Toyota Wigo #02 (${plate})`;\n      document.getElementById('maintenanceModal').classList.remove('hidden'); \n    }\n    function closeMaintenanceModal() { document.getElementById('maintenanceModal').classList.add('hidden'); }\n\n    function openInstructorModal() { document.getElementById('instructorModal').classList.remove('hidden'); }\n    function closeInstructorModal() { document.getElementById('instructorModal').classList.add('hidden'); }\n\n    function handleNewVehicle(e) {\n      e.preventDefault();\n      const model = document.getElementById('newModel').value;\n      const plate = document.getElementById('newPlate').value;\n      closeVehicleModal();\n      showFleetToast('Vehicle Registered', `${model} (${plate}) added to Tagum campus active inventory.`);\n    }\n\n    function handleMaintenanceSubmit(e) {\n      e.preventDefault();\n      const v = document.getElementById('pmsVehicle').value;\n      closeMaintenanceModal();\n      showFleetToast('PMS Order Dispatched', `Maintenance scheduled for ${v}. Flagged for technician check.`);\n    }\n\n    function handleNewInstructor(e) {\n      e.preventDefault();\n      const name = document.getElementById('instName').value;\n      const cert = document.getElementById('instCert').value;\n      closeInstructorModal();\n      showFleetToast('Faculty Accredited', `${name} (${cert}) successfully added to official LTO-accredited faculty.`);\n    }\n\n    function shiftFleetPage(page) {\n      document.getElementById('fleetPageBtn1').className = page === 1 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';\n      document.getElementById('fleetPageBtn2').className = page === 2 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';\n      document.getElementById('fleetPageLabel').textContent = `Showing ${page === 1 ? '4 of 14' : '10 of 14'} dual-control training units • Tagum Campus`;\n      showFleetToast('Fleet View Shifted', `Viewing training units page ${page}.`);\n    }\n\n    function filterFleetTable() {\n      const q = document.getElementById('fleetSearch').value.toLowerCase();\n      const rows = document.querySelectorAll('#fleetTableBody tr');\n      rows.forEach(r => {\n        const text = r.innerText.toLowerCase();\n        r.style.display = text.includes(q) ? '' : 'none';\n      });\n    }\n  " }} />
-
-
     </>
   );
 }

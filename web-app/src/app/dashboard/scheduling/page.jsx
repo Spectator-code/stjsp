@@ -1,5 +1,171 @@
 "use client";
+import { useEffect } from "react";
+import Link from "next/link";
+
 export default function Scheduling() {
+  function showSchedToast(title, msg) {
+    const toast = document.getElementById('schedToast');
+    if (!toast) return;
+    const tt = document.getElementById('schedToastTitle'); if (tt) tt.textContent = title;
+    const tm = document.getElementById('schedToastMsg'); if (tm) tm.textContent = msg;
+    toast.classList.remove('translate-y-32');
+    setTimeout(() => { toast.classList.add('translate-y-32'); }, 4000);
+  }
+
+  function selectSlot(studentName, permit, instructor, vehicle, time, curriculum, objectives) {
+    const sth = document.getElementById('slot-time-header'); if (sth) sth.textContent = time;
+    const ss = document.getElementById('slot-student'); if (ss) ss.textContent = studentName;
+    const sp = document.getElementById('slot-permit'); if (sp) sp.textContent = permit;
+    const si = document.getElementById('slot-instructor'); if (si) si.textContent = instructor;
+    const sv = document.getElementById('slot-vehicle'); if (sv) sv.textContent = vehicle;
+    const sc = document.getElementById('slot-curriculum'); if (sc) sc.textContent = curriculum;
+    const so = document.getElementById('slot-objectives'); if (so) so.textContent = objectives;
+
+    const parts = (studentName || '').trim().split(' ');
+    let initials = 'ST';
+    if (parts.length >= 2) {
+      initials = parts[0][0] + parts[1][0];
+    } else if (parts.length === 1 && parts[0].length > 0) {
+      initials = parts[0].substring(0, 2).toUpperCase();
+    }
+    const iniEl = document.getElementById('student-initial');
+    if (iniEl) iniEl.textContent = initials;
+  }
+
+  function openDispatchModal(time, vehicle, instructor) {
+    if (time) { const el = document.getElementById('modalTimeSlot'); if (el) el.value = time; }
+    if (vehicle) { const el = document.getElementById('modalVehicleSelect'); if (el) el.value = vehicle; }
+    if (instructor) { const el = document.getElementById('modalInstructorSelect'); if (el) el.value = instructor; }
+    const dm = document.getElementById('dispatchModal');
+    if (dm) dm.classList.remove('hidden');
+  }
+
+  function closeDispatchModal() {
+    const dm = document.getElementById('dispatchModal');
+    if (dm) dm.classList.add('hidden');
+  }
+
+  function handleDispatchSubmit(e) {
+    e.preventDefault();
+    closeDispatchModal();
+    showSchedToast('Dispatch Scheduled', 'New session booked and assigned to instructor with dual-control telematics.');
+  }
+
+  function cancelCurrentSession() {
+    const studentEl = document.getElementById('slot-student');
+    const student = studentEl ? studentEl.textContent : 'Assigned Student';
+    const timeEl = document.getElementById('slot-time-header');
+    const time = timeEl ? timeEl.textContent : 'Scheduled Slot';
+    const vehicleEl = document.getElementById('slot-vehicle');
+    const vehicle = vehicleEl ? vehicleEl.textContent : 'Training Unit';
+
+    if (typeof window !== 'undefined' && window.showConfirmDialog) {
+      window.showConfirmDialog({
+        title: 'Cancel Scheduled Practical Session',
+        message: 'Are you sure you want to cancel the scheduled practical driving session for ' + student + '? This will open the time slot on the daily dispatch matrix.',
+        badge: 'Session Cancellation',
+        type: 'danger',
+        confirmText: 'Cancel Session',
+        details: [
+          { label: 'Student', value: student },
+          { label: 'Time Slot', value: time },
+          { label: 'Allocated Unit', value: vehicle },
+          { label: 'Action Warning', value: 'Instructor will be notified of cancellation' }
+        ],
+        onConfirm: () => {
+          showSchedToast('Session Cancelled', 'Session for ' + student + ' removed from matrix. Slot now open.');
+        }
+      });
+    } else {
+      showSchedToast('Session Cancelled', 'Session for ' + student + ' removed from matrix. Slot now open.');
+    }
+  }
+
+  function switchView(view, btn) {
+    const buttons = document.querySelectorAll('#viewSwitcher button');
+    buttons.forEach(b => {
+      b.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium';
+    });
+    if (btn) btn.className = 'px-3 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-xs';
+    showSchedToast('View Changed', 'Switched calendar matrix to ' + view.toUpperCase() + ' mode.');
+  }
+
+  let dateOffset = 0;
+  function shiftDate(offset) {
+    dateOffset += offset;
+    const d = new Date(2024, 9, 24 + dateOffset);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const el = document.getElementById('currentDateLabel');
+    if (el) el.textContent = d.toLocaleDateString('en-US', options);
+    showSchedToast('Date Changed', 'Viewing schedule for ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  }
+
+  function resetToday() {
+    dateOffset = 0;
+    const el = document.getElementById('currentDateLabel');
+    if (el) el.textContent = 'Thursday, October 24, 2024';
+    showSchedToast('Date Reset', 'Viewing today schedule.');
+  }
+
+  function filterMatrixRows() {
+    const cf = document.getElementById('courseFilter');
+    const inf = document.getElementById('instructorFilter');
+    const course = cf ? cf.value : 'all';
+    const instructor = inf ? inf.value : 'all';
+    const rows = document.querySelectorAll('.matrix-row');
+
+    rows.forEach(r => {
+      const rCourse = r.getAttribute('data-course');
+      const rInstructor = r.getAttribute('data-instructor');
+
+      const courseMatch = (course === 'all') || (rCourse === course);
+      const instructorMatch = (instructor === 'all') || (rInstructor === instructor);
+
+      r.style.display = (courseMatch && instructorMatch) ? '' : 'none';
+    });
+  }
+
+  function filterMatrixByText(q) {
+    const text = (q || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.matrix-row');
+    rows.forEach(r => {
+      r.style.display = r.innerText.toLowerCase().includes(text) ? '' : 'none';
+    });
+  }
+
+  let markScores = { Brake: 4, Steer: 5, Signs: 4 };
+  function toggleMark(btn, type) {
+    if (typeof btn === 'string') btn = document.getElementById(btn);
+    if (!btn && type) btn = document.getElementById('mark' + type);
+    if (!btn) return;
+    markScores[type] = markScores[type] >= 5 ? 3 : markScores[type] + 1;
+    btn.textContent = type + ': ' + markScores[type] + '/5';
+    showSchedToast('Score Marked', type + ' score logged as ' + markScores[type] + '/5');
+  }
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      document.body.removeAttribute('data-print-target');
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    window.showSchedToast = showSchedToast;
+    window.selectSlot = selectSlot;
+    window.openDispatchModal = openDispatchModal;
+    window.closeDispatchModal = closeDispatchModal;
+    window.handleDispatchSubmit = handleDispatchSubmit;
+    window.cancelCurrentSession = cancelCurrentSession;
+    window.switchView = switchView;
+    window.shiftDate = shiftDate;
+    window.resetToday = resetToday;
+    window.filterMatrixRows = filterMatrixRows;
+    window.filterMatrixByText = filterMatrixByText;
+    window.toggleMark = toggleMark;
+
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
   return (
     <>
       
@@ -9,7 +175,7 @@ export default function Scheduling() {
     <div className="flex flex-col">
       {/* Logo Header */}
       <div className="h-16 px-5 border-b border-slate-100 flex items-center gap-3">
-        <img src="../assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
+        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
         <div className="flex flex-col min-w-0">
           <span className="font-display text-xs font-extrabold text-slate-900 tracking-tight truncate">ST. JOSEPH CUPERTINO</span>
           <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider truncate">Driving School • Tagum</span>
@@ -33,41 +199,41 @@ export default function Scheduling() {
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Core Management</span>
         </div>
         <nav className="space-y-1 text-xs">
-          <a href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/dashboard/operations" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">dashboard</span>
             Operations Dashboard
-          </a>
-          <a href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
+          </Link>
+          <Link href="/dashboard/scheduling" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-900 text-white font-medium transition-colors shadow-xs">
             <span className="material-symbols-outlined text-base">calendar_month</span>
             Scheduling & Dispatch
-          </a>
-          <a href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/students" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">school</span>
             Students & Progress
-          </a>
-          <a href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/tuition" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">receipt_long</span>
             Tuition & Payments
-          </a>
-          <a href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/fleet" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">directions_car</span>
             Fleet & Instructors
-          </a>
-          <a href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          </Link>
+          <Link href="/dashboard/reports" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">verified_user</span>
             Reports & Compliance
-          </a>
+          </Link>
 
           <div className="pt-3 my-2 border-t border-slate-100"></div>
 
-          <a href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
+          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">public</span>
             Public Website
-          </a>
-          <a href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
+          </Link>
+          <Link href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
             <span className="material-symbols-outlined text-base">logout</span>
             Sign Out
-          </a>
+          </Link>
         </nav>
       </div>
     </div>
@@ -106,6 +272,11 @@ export default function Scheduling() {
         <span className="font-medium">Conflict Detector: <strong>0 Overlaps</strong></span>
       </div>
 
+      <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50/80 border border-emerald-200/60 text-xs text-emerald-800 font-medium">
+        <span className="material-symbols-outlined text-sm text-emerald-600">shield_lock</span>
+        <span>RA 10173 Protected</span>
+      </div>
+
       <a href="/" className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors hidden sm:inline-flex items-center gap-1">
         <span className="material-symbols-outlined text-sm">arrow_back</span>
         Public Site
@@ -125,25 +296,25 @@ export default function Scheduling() {
   </header>
 
   {/* Main Content */}
-  <main className="ml-64 pt-16 min-h-screen bg-slate-50 overflow-x-hidden">
-    <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto xl:max-w-none">
+  <main id="main-content" className="ml-64 pt-16 min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="p-6 sm:p-8 pb-32 sm:pb-36 space-y-6 max-w-7xl mx-auto xl:max-w-none">
 
       {/* Action Ribbon & Navigation Toolbar */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
+      <div className="action-toolbar no-print bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
         
         {/* Date Selector */}
         <div className="flex items-center gap-2">
-          <button onClick={() => {window.shiftDate(-1)}} className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+          <button onClick={() => {window.shiftDate(-1)}} className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" aria-label="Previous Day">
             <span className="material-symbols-outlined text-base">chevron_left</span>
           </button>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800">
             <span className="material-symbols-outlined text-base text-slate-500">calendar_today</span>
             <span id="currentDateLabel">Thursday, October 24, 2024</span>
           </div>
-          <button onClick={() => {window.shiftDate(1)}} className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+          <button onClick={() => {window.shiftDate(1)}} className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" aria-label="Next Day">
             <span className="material-symbols-outlined text-base">chevron_right</span>
           </button>
-          <button onClick={() => {window.resetToday()}} className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors">
+          <button onClick={() => {window.resetToday()}} className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
             Today
           </button>
         </div>
@@ -152,9 +323,9 @@ export default function Scheduling() {
         <div className="flex flex-wrap items-center gap-2">
           {/* View switcher */}
           <div className="bg-slate-100 p-1 rounded-lg flex items-center text-xs" id="viewSwitcher">
-            <button onClick={() => {window.switchView('day', this)}} className="px-3 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-xs">Day</button>
-            <button onClick={() => {window.switchView('week', this)}} className="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium">Week</button>
-            <button onClick={() => {window.switchView('month', this)}} className="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium">Month</button>
+            <button onClick={(e) => {window.switchView('day', e.currentTarget)}} className="px-3 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-xs">Day</button>
+            <button onClick={(e) => {window.switchView('week', e.currentTarget)}} className="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium">Week</button>
+            <button onClick={(e) => {window.switchView('month', e.currentTarget)}} className="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium">Month</button>
           </div>
 
           {/* Course Type Filter */}
@@ -182,7 +353,7 @@ export default function Scheduling() {
           </div>
 
           {/* New Dispatch Button */}
-          <button onClick={() => {window.openDispatchModal()}} className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center gap-1.5 shadow-xs">
+          <button onClick={() => {window.openDispatchModal()}} className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
             <span className="material-symbols-outlined text-base">add_circle</span>
             New Dispatch
           </button>
@@ -194,7 +365,7 @@ export default function Scheduling() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
         {/* Primary Gantt Dispatch Grid (9 cols) */}
-        <div className="xl:col-span-8 2xl:col-span-9 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="matrix-container xl:col-span-8 2xl:col-span-9 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           
           {/* Grid Header */}
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">
@@ -491,7 +662,7 @@ export default function Scheduling() {
           </div>
 
           {/* Matrix Footer */}
-          <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="timetable-section no-print p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-4 text-slate-500">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -504,8 +675,8 @@ export default function Scheduling() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => {window.showSchedToast('Timetable Exported', 'Full daily dispatch grid downloaded in PDF and CSV format.')}} className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-700 transition-colors">Export Timetable</button>
-              <button onClick={() => {window.showSchedToast('Mass Reschedule Activated', 'Selected batch sessions updated without conflict.')}} className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-700 transition-colors">Mass Reschedule</button>
+              <button onClick={() => {window.showSchedToast('Timetable Exported', 'Full daily dispatch grid downloaded in PDF and CSV format.')}} className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-700 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Export Timetable</button>
+              <button onClick={() => {window.showSchedToast('Mass Reschedule Activated', 'Selected batch sessions updated without conflict.')}} className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-700 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Mass Reschedule</button>
             </div>
           </div>
 
@@ -515,8 +686,15 @@ export default function Scheduling() {
         <div className="xl:col-span-4 2xl:col-span-3 flex flex-col gap-4">
           
           {/* Slot Inspector Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4 sticky top-20">
+          <div id="slotInspectorCard" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4 sticky top-20">
             
+            {/* Dedicated Print-Only Trip Ticket Header */}
+            <div className="print-header hidden pb-3 border-b-2 border-slate-900 mb-3 text-center">
+              <h2 className="text-base font-extrabold text-slate-900">ST. JOSEPH CUPERTINO DRIVING SCHOOL</h2>
+              <p className="text-xs text-slate-600">Pioneer Ave Campus, Tagum City • LTO Accr: DS-R11-2021-089</p>
+              <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Official Daily In-Car Trip Ticket &amp; Evaluation Manifest</p>
+            </div>
+
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-slate-800 text-lg">tune</span>
@@ -580,43 +758,59 @@ export default function Scheduling() {
             </div>
 
             {/* Quick Marks */}
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-1.5 pt-1 no-print">
               <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Instructor Rapid Marks (Click to toggle)</span>
               <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-                <button id="markBrake" onClick={() => {window.toggleMark(this, 'Brake')}} className="py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-center transition-colors">
+                <button id="markBrake" onClick={(e) => { if (typeof window !== 'undefined' && window.toggleMark) window.toggleMark(e.currentTarget, 'Brake'); }} className="py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-center transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                   Brake: 4/5
                 </button>
-                <button id="markSteer" onClick={() => {window.toggleMark(this, 'Steer')}} className="py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-center transition-colors">
+                <button id="markSteer" onClick={(e) => { if (typeof window !== 'undefined' && window.toggleMark) window.toggleMark(e.currentTarget, 'Steer'); }} className="py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-center transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                   Steer: 5/5
                 </button>
-                <button id="markSigns" onClick={() => {window.toggleMark(this, 'Signs')}} className="py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-center transition-colors">
+                <button id="markSigns" onClick={(e) => { if (typeof window !== 'undefined' && window.toggleMark) window.toggleMark(e.currentTarget, 'Signs'); }} className="py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-center transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                   Signs: 4/5
                 </button>
               </div>
             </div>
 
             {/* Action Buttons Group */}
-            <div className="space-y-2 pt-2">
-              <button onClick={() => {window.print()}} className="w-full py-2 px-3 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-xs">
+            <div className="space-y-2 pt-2 no-print">
+              <button onClick={() => { document.body.setAttribute('data-print-target', 'trip-ticket'); window.print(); }} className="w-full py-2 px-3 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                 <span className="material-symbols-outlined text-sm">print</span>
                 Print Daily Trip Ticket
               </button>
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => {window.showSchedToast('Reschedule Window Opened', 'Select new time slot on matrix to move session.')}} className="py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors">
+                <button onClick={() => showSchedToast('Reschedule Window Opened', 'Select new time slot on matrix to move session.')} className="py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                   <span className="material-symbols-outlined text-xs">schedule</span>
                   Reschedule
                 </button>
-                <button onClick={() => {window.showSchedToast('Unit Reassignment', 'Vehicle swap menu opened for current session.')}} className="py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors">
+                <button onClick={() => showSchedToast('Unit Reassignment', 'Vehicle swap menu opened for current session.')} className="py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
                   <span className="material-symbols-outlined text-xs">swap_horiz</span>
                   Reassign Car
                 </button>
+              </div>
+              <button onClick={() => cancelCurrentSession()} className="w-full py-1.5 px-2 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none">
+                <span className="material-symbols-outlined text-xs">event_busy</span>
+                Cancel Scheduled Session
+              </button>
+            </div>
+
+            {/* Print Only Trip Ticket Signatures */}
+            <div className="print-footer hidden pt-6 border-t border-slate-300 mt-4 text-xs text-slate-700 flex justify-between">
+              <div>
+                <p className="border-t border-slate-800 pt-1 font-semibold">Student Signature Over Printed Name</p>
+                <p className="text-[10px] text-slate-500">Date &amp; Time Completed</p>
+              </div>
+              <div className="text-right">
+                <p className="border-t border-slate-800 pt-1 font-semibold">Instructor Signature &amp; LTO ID</p>
+                <p className="text-[10px] text-slate-500">Dual-Control Telematics Verified</p>
               </div>
             </div>
 
           </div>
 
           {/* Instructor Attendance Quick Panel */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <div className="attendance-panel bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h4 className="font-display text-xs font-bold text-slate-900">Instructor Attendance</h4>
               <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">4 / 4 Present</span>
@@ -654,19 +848,19 @@ export default function Scheduling() {
   </main>
 
   {/* Modal: New Dispatch Session */}
-  <div id="dispatchModal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="dispatchModal" role="dialog" aria-modal="true" aria-labelledby="dispatchModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 className="font-display font-bold text-sm text-slate-900">Schedule New Dispatch Session</h3>
-        <button onClick={() => {window.closeDispatchModal()}} className="text-slate-400 hover:text-slate-900">
+        <h3 id="dispatchModalTitle" className="font-display font-bold text-sm text-slate-900">Schedule New Dispatch Session</h3>
+        <button onClick={() => closeDispatchModal()} aria-label="Close dispatch modal" className="text-slate-400 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none rounded">
           <span className="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
 
-      <form onSubmit={(event) => { window.handleDispatchSubmit(event) }} className="space-y-3 text-xs">
+      <form onSubmit={(event) => handleDispatchSubmit(event)} className="space-y-3 text-xs">
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Select Student</label>
-          <select id="modalStudentSelect" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
+          <label htmlFor="modalStudentSelect" className="block font-bold text-slate-700 mb-1">Select Student</label>
+          <select id="modalStudentSelect" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option>Camille Sison (SP-2024-9452) — PDC-A</option>
             <option>Joshua Tan (SP-2024-7740) — PDC-M</option>
             <option>Bea Bianca Ramos (SP-2024-8831) — PDC-A</option>
@@ -675,12 +869,12 @@ export default function Scheduling() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Time Slot</label>
-            <input type="text" id="modalTimeSlot" defaultValue="01:00 PM - 03:00 PM" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200" />
+            <label htmlFor="modalTimeSlot" className="block font-bold text-slate-700 mb-1">Time Slot</label>
+            <input type="text" id="modalTimeSlot" defaultValue="01:00 PM - 03:00 PM" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
           </div>
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Training Unit</label>
-            <select id="modalVehicleSelect" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
+            <label htmlFor="modalVehicleSelect" className="block font-bold text-slate-700 mb-1">Training Unit</label>
+            <select id="modalVehicleSelect" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
               <option>Toyota Vios #03 (Automatic)</option>
               <option>Toyota Vios #01 (Manual)</option>
               <option>Toyota Wigo #02 (Automatic)</option>
@@ -689,8 +883,8 @@ export default function Scheduling() {
           </div>
         </div>
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Assigned Instructor</label>
-          <select id="modalInstructorSelect" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
+          <label htmlFor="modalInstructorSelect" className="block font-bold text-slate-700 mb-1">Assigned Instructor</label>
+          <select id="modalInstructorSelect" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option>Inst. Danilo Cruz</option>
             <option>Engr. Roberto Dalisay</option>
             <option>Inst. Carlo Mendoza</option>
@@ -698,28 +892,25 @@ export default function Scheduling() {
           </select>
         </div>
         <div>
-          <label className="block font-bold text-slate-700 mb-1">Module / Training Focus</label>
-          <input type="text" defaultValue="PDC Lesson 4: City Intersections & Highway Entry" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200" />
+          <label htmlFor="modalCurriculumFocus" className="block font-bold text-slate-700 mb-1">Module / Training Focus</label>
+          <input type="text" id="modalCurriculumFocus" defaultValue="PDC Lesson 4: City Intersections & Highway Entry" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div className="pt-2 flex justify-end gap-2">
-          <button type="button" onClick={() => {window.closeDispatchModal()}} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">Cancel</button>
-          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 shadow-xs">Confirm Dispatch</button>
+          <button type="button" onClick={() => closeDispatchModal()} className="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Cancel</button>
+          <button type="submit" className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Confirm Dispatch</button>
         </div>
       </form>
     </div>
   </div>
 
   {/* Toast Notification */}
-  <div id="schedToast" className="fixed bottom-6 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
+  <div id="schedToast" role="status" aria-live="polite" className="fixed bottom-20 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
     <span className="material-symbols-outlined text-emerald-400">task_alt</span>
     <div className="flex flex-col text-xs">
       <span className="font-bold" id="schedToastTitle">Schedule Updated</span>
       <span className="text-slate-300" id="schedToastMsg">Session slotted successfully</span>
     </div>
   </div>
-
-  <script dangerouslySetInnerHTML={{ __html: "\n    function showSchedToast(title, msg) {\n      const toast = document.getElementById('schedToast');\n      document.getElementById('schedToastTitle').textContent = title;\n      document.getElementById('schedToastMsg').textContent = msg;\n      toast.classList.remove('translate-y-32');\n      setTimeout(() => { toast.classList.add('translate-y-32'); }, 4000);\n    }\n\n    function selectSlot(studentName, permit, instructor, vehicle, time, curriculum, objectives) {\n      document.getElementById('slot-time-header').textContent = time;\n      document.getElementById('slot-student').textContent = studentName;\n      document.getElementById('slot-permit').textContent = permit;\n      document.getElementById('slot-instructor').textContent = instructor;\n      document.getElementById('slot-vehicle').textContent = vehicle;\n      document.getElementById('slot-curriculum').textContent = curriculum;\n      document.getElementById('slot-objectives').textContent = objectives;\n\n      const parts = studentName.trim().split(' ');\n      let initials = 'ST';\n      if (parts.length >= 2) {\n        initials = parts[0][0] + parts[1][0];\n      } else if (parts.length === 1 && parts[0].length > 0) {\n        initials = parts[0].substring(0, 2).toUpperCase();\n      }\n      document.getElementById('student-initial').textContent = initials;\n    }\n\n    function openDispatchModal(time, vehicle, instructor) {\n      if (time) document.getElementById('modalTimeSlot').value = time;\n      if (vehicle) document.getElementById('modalVehicleSelect').value = vehicle;\n      if (instructor) document.getElementById('modalInstructorSelect').value = instructor;\n      document.getElementById('dispatchModal').classList.remove('hidden');\n    }\n\n    function closeDispatchModal() {\n      document.getElementById('dispatchModal').classList.add('hidden');\n    }\n\n    function handleDispatchSubmit(e) {\n      e.preventDefault();\n      closeDispatchModal();\n      showSchedToast('Dispatch Scheduled', 'New session booked and assigned to instructor with dual-control telematics.');\n    }\n\n    function switchView(view, btn) {\n      const buttons = document.querySelectorAll('#viewSwitcher button');\n      buttons.forEach(b => {\n        b.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium';\n      });\n      btn.className = 'px-3 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-xs';\n      showSchedToast('View Changed', 'Switched calendar matrix to ' + view.toUpperCase() + ' mode.');\n    }\n\n    let dateOffset = 0;\n    function shiftDate(offset) {\n      dateOffset += offset;\n      const d = new Date(2024, 9, 24 + dateOffset);\n      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };\n      document.getElementById('currentDateLabel').textContent = d.toLocaleDateString('en-US', options);\n      showSchedToast('Date Changed', 'Viewing schedule for ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));\n    }\n\n    function resetToday() {\n      dateOffset = 0;\n      document.getElementById('currentDateLabel').textContent = 'Thursday, October 24, 2024';\n      showSchedToast('Date Reset', 'Viewing today schedule.');\n    }\n\n    function filterMatrixRows() {\n      const course = document.getElementById('courseFilter').value;\n      const instructor = document.getElementById('instructorFilter').value;\n      const rows = document.querySelectorAll('.matrix-row');\n\n      rows.forEach(r => {\n        const rCourse = r.getAttribute('data-course');\n        const rInstructor = r.getAttribute('data-instructor');\n\n        const courseMatch = (course === 'all') || (rCourse === course);\n        const instructorMatch = (instructor === 'all') || (rInstructor === instructor);\n\n        r.style.display = (courseMatch && instructorMatch) ? '' : 'none';\n      });\n    }\n\n    function filterMatrixByText(q) {\n      const text = q.toLowerCase().trim();\n      const rows = document.querySelectorAll('.matrix-row');\n      rows.forEach(r => {\n        r.style.display = r.innerText.toLowerCase().includes(text) ? '' : 'none';\n      });\n    }\n\n    let markScores = { Brake: 4, Steer: 5, Signs: 4 };\n    function toggleMark(btn, type) {\n      markScores[type] = markScores[type] >= 5 ? 3 : markScores[type] + 1;\n      btn.textContent = type + ': ' + markScores[type] + '/5';\n      showSchedToast('Score Marked', type + ' score logged as ' + markScores[type] + '/5');\n    }\n  " }} />
-
 
     </>
   );

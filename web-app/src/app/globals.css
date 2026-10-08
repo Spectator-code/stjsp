@@ -17,3 +17,436 @@ h4,
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+/* Accessibility Focus Visible */
+:focus-visible {
+  outline: 2px solid #0f172a !important;
+  outline-offset: 2px !important;
+}
+
+/* Eliminate active touch/press scaling animations across all buttons and links */
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active,
+a:active,
+[role="button"]:active {
+  transform: none !important;
+  scale: 1 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   PRINT LAYOUT - RECORD-ONLY PRINTING SYSTEM
+   ========================================================================== */
+@media screen {
+  .print-header,
+  .print-footer,
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    margin: 12mm 15mm;
+    size: auto;
+  }
+
+  /* Universal chrome and interactive UI hiding */
+  aside,
+  header,
+  footer,
+  nav,
+  .no-print,
+  [data-no-print],
+  button,
+  input,
+  select,
+  textarea,
+  .filter-btn,
+  .gallery-filter-btn,
+  #scrollUpBtn,
+  #scrollDownBtn,
+  #statusFilterGroup,
+  #viewSwitcher,
+  #channelFilter,
+  #searchInput,
+  #studentTableSearch,
+  #topStudentSearch,
+  #topTuitionSearch,
+  #certSearch,
+  #fleetSearch,
+  #runsTableSearch,
+  .kpi-cards,
+  .action-toolbar,
+  .table-filters,
+  .intake-drawer,
+  .detail-drawer,
+  .attendance-panel,
+  .hide-on-print,
+  #globalConfirmModal,
+  [id$="Toast"],
+  [id$="Notification"],
+  [class*="z-\[99999\]"] {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    background: transparent !important;
+  }
+
+  /* Expand split grid containers so record tables take 100% full width */
+  .grid-cols-12,
+  .xl\:grid-cols-12,
+  .lg\:grid-cols-12,
+  .md\:grid-cols-12 {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .xl\:col-span-8,
+  .xl\:col-span-7,
+  .xl\:col-span-6,
+  .lg\:col-span-8,
+  .col-span-12 {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Show dedicated print document headers and verification footers */
+  .print-header {
+    display: block !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid #0f172a !important;
+  }
+
+  .print-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-top: 24px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #cbd5e1 !important;
+    font-size: 8.5pt !important;
+    color: #475569 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* -------------------------------------------------------------------------
+     MODAL RECORD 1: OFFICIAL COMPLETION CERTIFICATE
+     ------------------------------------------------------------------------- */
+  body:has(#certModal:not(.hidden)),
+  body[data-print-target="certificate"] {
+    & > *:not(#certModal),
+    & main {
+      display: none !important;
+    }
+
+    #certModal {
+      position: static !important;
+      display: block !important;
+      inset: auto !important;
+      background: transparent !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      width: 100% !important;
+      max-width: 780px !important;
+    }
+
+    #certModal > div {
+      border: 4px double #0f172a !important;
+      box-shadow: none !important;
+      margin: 0 auto !important;
+      padding: 36px 40px !important;
+      border-radius: 12px !important;
+      background: #ffffff !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     MODAL RECORD 2: OFFICIAL TUITION RECEIPT SLIP
+     ------------------------------------------------------------------------- */
+  body:has(#receiptModal:not(.hidden)),
+  body[data-print-target="receipt"] {
+    & > *:not(#receiptModal),
+    & main {
+      display: none !important;
+    }
+
+    #receiptModal {
+      position: static !important;
+      display: block !important;
+      inset: auto !important;
+      background: transparent !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      width: 100% !important;
+      max-width: 380px !important;
+    }
+
+    #receiptModal > div {
+      border: 2px dashed #0f172a !important;
+      box-shadow: none !important;
+      margin: 0 auto !important;
+      padding: 24px 20px !important;
+      border-radius: 8px !important;
+      background: #ffffff !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      font-family: monospace !important;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     MODAL RECORD 3: STUDENT ADMISSION VOUCHER SLIP
+     ------------------------------------------------------------------------- */
+  body:has(#voucherModal),
+  body[data-print-target="voucher"] {
+    & > *:not(#voucherModal),
+    & main {
+      display: none !important;
+    }
+
+    #voucherModal {
+      position: static !important;
+      display: block !important;
+      inset: auto !important;
+      background: transparent !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      width: 100% !important;
+      max-width: 520px !important;
+    }
+
+    #voucherModal > div {
+      border: 2px solid #0f172a !important;
+      box-shadow: none !important;
+      margin: 0 auto !important;
+      padding: 28px 32px !important;
+      border-radius: 12px !important;
+      background: #ffffff !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     CARD RECORD 4: DAILY IN-CAR TRIP TICKET & DISPATCH MANIFEST
+     ------------------------------------------------------------------------- */
+  body[data-print-target="trip-ticket"] {
+    & aside,
+    & header,
+    & .timetable-section,
+    & .matrix-container,
+    & .attendance-panel {
+      display: none !important;
+    }
+
+    #slotInspectorCard {
+      position: static !important;
+      display: block !important;
+      margin: 0 auto !important;
+      max-width: 580px !important;
+      border: 2px solid #0f172a !important;
+      padding: 26px 30px !important;
+      border-radius: 12px !important;
+      box-shadow: none !important;
+      background: #ffffff !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     TABLES & LEDGERS: PRINT RECORDS ONLY
+     ------------------------------------------------------------------------- */
+  .printable-records {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .printable-records table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1.5px solid #0f172a !important;
+    margin-top: 8px !important;
+    font-size: 9pt !important;
+  }
+
+  .printable-records th,
+  .printable-records td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 10px !important;
+    color: #0f172a !important;
+    vertical-align: middle !important;
+  }
+
+  .printable-records th {
+    background-color: #f1f5f9 !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 8pt !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .printable-records tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .no-print-col {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   PORTAL 3D CARD FLIP EFFECTS
+   ========================================================================== */
+.portal-flip-viewport {
+  perspective: 1400px;
+  -webkit-perspective: 1400px;
+  perspective-origin: 50% 250px;
+}
+
+@keyframes portalFlipToLogin {
+  0% {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(-75deg) scale(0.94);
+  }
+  60% {
+    opacity: 0.95;
+    transform: perspective(1400px) rotateY(5deg) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) scale(1);
+  }
+}
+
+@keyframes portalFlipToEnroll {
+  0% {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(75deg) scale(0.94);
+  }
+  60% {
+    opacity: 0.95;
+    transform: perspective(1400px) rotateY(-5deg) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) scale(1);
+  }
+}
+
+.portal-flip-login {
+  animation: portalFlipToLogin 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.portal-flip-enroll {
+  animation: portalFlipToEnroll 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* ==========================================================================
+   DATA PROTECTION & ANTI-COPY SYSTEM (RA 10173 DATA PRIVACY ACT)
+   ========================================================================== */
+body,
+table,
+tr,
+td,
+th,
+tbody,
+thead,
+.printable-records,
+.kpi-cards,
+.action-toolbar,
+#main-content,
+header,
+footer,
+section,
+article,
+aside,
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Allow text selection strictly inside active user input fields and editable forms */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+/* Sensitive record security styling */
+.data-protected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(4, 120, 87);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+
