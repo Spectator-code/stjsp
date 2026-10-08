@@ -449,4 +449,100 @@ textarea,
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+/* ==========================================================================
+   OBSIDIAN DARK THEME (TAILWIND CLASS: .dark)
+   ========================================================================== */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #020617 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark main {
+  background-color: #020617 !important;
+}
+
+.dark .bg-white {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #1e293b !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: #020617 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+.dark .border-slate-200,
+.dark .border-slate-100 {
+  border-color: #1e293b !important;
+}
+
+.dark .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  background-color: #1e293b !important;
+  border-color: #d97706 !important;
+}
+
+.dark .glass-header {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(51, 65, 85, 0.6) !important;
+}
+
+.dark table thead {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  border-color: #1e293b !important;
+}
+
+.dark table thead th {
+  color: #94a3b8 !important;
+}
+
+.dark table tbody tr {
+  border-color: #1e293b !important;
+}
+
+.dark table tbody tr:hover {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+
 

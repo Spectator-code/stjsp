@@ -151,9 +151,9 @@ All tabular records implement dual-mode rendering:
 - [x] Eliminate layout boundary collisions by adding `pb-32 sm:pb-36` content clearance.
 - [x] Implement Republic Act 10173 Data Protection Guard & anti-copy clipboard protection.
 - [x] Add high-contrast accessible modal dialogs (`ConfirmDialog.jsx`).
-- [ ] *(Optional Future Phase)* Dark mode toggle (`dark:` utility classes).
-- [ ] *(Optional Future Phase)* Real-time telematics GPS speed telemetry mock on fleet map.
-- [ ] *(Optional Future Phase)* SMS notification gateway webhook simulator for student schedule reminders.
+- [x] Dark mode toggle (`dark:` utility classes & dynamic theme switcher in `ScrollControls.jsx`).
+- [x] Real-time telematics GPS speed telemetry radar stream on operations dashboard.
+- [x] SMS notification gateway webhook simulator for student schedule reminders.
 
 ---
 *Document produced for St. Joseph Cupertino Driving School IT12 Capstone Project.*

@@ -143,6 +143,10 @@ export default function Scheduling() {
     showSchedToast('Score Marked', type + ' score logged as ' + markScores[type] + '/5');
   }
 
+  function broadcastSmsReminders() {
+    showSchedToast("SMS Reminders Dispatched", "LTO session reminders transmitted to all 36 students scheduled for today's sessions.");
+  }
+
   useEffect(() => {
     const handleAfterPrint = () => {
       document.body.removeAttribute('data-print-target');
@@ -161,6 +165,7 @@ export default function Scheduling() {
     window.filterMatrixRows = filterMatrixRows;
     window.filterMatrixByText = filterMatrixByText;
     window.toggleMark = toggleMark;
+    window.broadcastSmsReminders = broadcastSmsReminders;
 
     return () => {
       window.removeEventListener('afterprint', handleAfterPrint);
@@ -677,6 +682,10 @@ export default function Scheduling() {
             <div className="flex items-center gap-2">
               <button onClick={() => {window.showSchedToast('Timetable Exported', 'Full daily dispatch grid downloaded in PDF and CSV format.')}} className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-700 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Export Timetable</button>
               <button onClick={() => {window.showSchedToast('Mass Reschedule Activated', 'Selected batch sessions updated without conflict.')}} className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-700 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">Mass Reschedule</button>
+              <button onClick={() => {window.broadcastSmsReminders()}} className="px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-semibold transition-colors flex items-center gap-1.5 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
+                <span className="material-symbols-outlined text-sm text-amber-400">sms</span>
+                Broadcast SMS
+              </button>
             </div>
           </div>
 
