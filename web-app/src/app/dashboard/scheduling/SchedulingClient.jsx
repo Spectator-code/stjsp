@@ -138,6 +138,27 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
     }
   }
 
+  async function reassignInstructor() {
+    const sessionId = window.currentSelectedSessionId;
+    if (!sessionId) { alert('Please select a session on the grid first.'); return; }
+    
+    const newInstructor = prompt('Enter the name of the new instructor to reassign:');
+    if (!newInstructor) return;
+    
+    try {
+      const res = await fetch('/api/sessions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: sessionId, instructor_name: newInstructor })
+      });
+      if (!res.ok) throw new Error('Failed to update instructor');
+      showSchedToast('Instructor Reassigned', 'Successfully updated the designated instructor.');
+      setTimeout(() => window.location.reload(), 1500);
+    } catch(e) {
+      alert('Error updating session: ' + e.message);
+    }
+  }
+
   async function rescheduleSession() {
     const sessionId = window.currentSelectedSessionId;
     if (!sessionId) { alert('Please select a session on the grid first.'); return; }
