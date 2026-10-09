@@ -390,15 +390,7 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
       
 
       {/* Profile */}
-      <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
-        <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
-          ME
-        </div>
-        <div className="hidden md:flex flex-col text-left">
-          <span className="text-xs font-semibold text-slate-900 leading-tight">Maria Elena Santos</span>
-          <span className="text-[10px] text-slate-500">Registrar & Admin</span>
-        </div>
-      </div>
+      <HeaderAvatar fallbackName="Maria Elena Santos" fallbackRole="Registrar & Admin" />
     </div>
   </header>
 

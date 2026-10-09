@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import HeaderAvatar from "../../../components/HeaderAvatar";
 
 export default function StudentDashboardClient({ user, courses = [], enrollments = [], payments = [], sessions = [] }) {
   const router = useRouter();
@@ -75,9 +76,8 @@ export default function StudentDashboardClient({ user, courses = [], enrollments
             <span className="font-display font-extrabold text-sm text-slate-900 group-hover:text-amber-600 transition-colors">Student Portal</span>
           </Link>
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 mr-2 text-right">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logged in as</span>
-              <span className="text-xs font-bold text-slate-800">{firstName} {lastName}</span>
+            <div className="hidden sm:flex items-center mr-2">
+              <HeaderAvatar fallbackName={`${firstName} ${lastName}`} fallbackRole="Student" />
             </div>
             <button onClick={handleSignOut} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors group">
               <span className="material-symbols-outlined text-[16px] group-hover:text-amber-600 transition-colors">logout</span>

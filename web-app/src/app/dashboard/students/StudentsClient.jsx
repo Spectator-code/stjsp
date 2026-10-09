@@ -68,10 +68,10 @@ export default function StudentsClient({ students }) {
 
           {/* Campus Tag */}
           <div className="px-4 py-3">
-            <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 text-slate-600">
-                <span className="material-symbols-outlined text-sm text-amber-600">location_on</span>
-                <span className="font-medium truncate">St. Pio Building, Purok Magsanoc, Mankilam Campus</span>
+            <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs gap-2">
+              <div className="flex items-center gap-1.5 text-slate-600 min-w-0">
+                <span className="material-symbols-outlined text-sm text-amber-600 shrink-0">location_on</span>
+                <span className="font-medium truncate">Tagum Main Campus</span>
               </div>
             </div>
           </div>
@@ -151,15 +151,7 @@ export default function StudentsClient({ students }) {
 
         <div className="flex items-center gap-3">
           {/* Profile */}
-          <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
-              AD
-            </div>
-            <div className="hidden md:flex flex-col text-left">
-              <span className="text-xs font-semibold text-slate-900 leading-tight">Admin Account</span>
-              <span className="text-[10px] text-slate-500">Registrar & Operations</span>
-            </div>
-          </div>
+          <HeaderAvatar fallbackName="Admin Account" fallbackRole="Registrar & Operations" />
         </div>
       </header>
 
