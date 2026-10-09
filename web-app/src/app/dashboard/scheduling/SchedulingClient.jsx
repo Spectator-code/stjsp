@@ -314,6 +314,8 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
     window.cancelCurrentSession = cancelCurrentSession;
     window.reassignCar = reassignCar;
     window.rescheduleSession = rescheduleSession;
+    window.reassignInstructor = reassignInstructor;
+    window.confirmReassignInstructor = confirmReassignInstructor;
     window.switchView = switchView;
     window.shiftDate = shiftDate;
     window.resetToday = resetToday;
