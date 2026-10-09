@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function StudentDashboardClient({ user, courses = [], enrollments = [], payments = [] }) {
+export default function StudentDashboardClient({ user, courses = [], enrollments = [], payments = [], sessions = [] }) {
   const router = useRouter();
   
   // State for modals
@@ -54,20 +54,6 @@ export default function StudentDashboardClient({ user, courses = [], enrollments
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleUploadMedical = () => {
-    // Simulate file picking and uploading
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*,.pdf";
-    input.onchange = (e) => {
-      if (e.target.files.length > 0) {
-        setMedicalStatus("UPLOADING");
-        setTimeout(() => setMedicalStatus("VERIFIED"), 2000);
-      }
-    };
-    input.click();
   };
 
   const handleDownloadManual = () => {
@@ -198,35 +184,56 @@ export default function StudentDashboardClient({ user, courses = [], enrollments
           </div>
           
           {/* Upcoming Schedule */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 border border-slate-700 shadow-md md:col-span-1 lg:col-span-2 text-white relative overflow-hidden group">
-             <span className="material-symbols-outlined text-[120px] absolute -right-6 -bottom-6 text-slate-700/30 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">calendar_month</span>
-             
-             <h2 className="font-extrabold text-lg flex items-center gap-2 mb-6 relative z-10">
-               <span className="material-symbols-outlined text-emerald-400">event_upcoming</span>
-               Next Session
-             </h2>
-             
-             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/10 relative z-10 hover:bg-white/15 transition-colors cursor-pointer">
-               <div className="flex items-start justify-between">
-                 <div>
-                   <p className="text-xs font-semibold text-emerald-400 mb-1">TDC Module 2</p>
-                   <p className="text-xl font-bold text-white tracking-tight mb-0.5">Saturday, Oct 17</p>
-                   <p className="text-sm text-slate-300">9:00 AM - 12:00 PM</p>
-                 </div>
-                 <div className="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl">
-                   <span className="material-symbols-outlined">schedule</span>
-                 </div>
-               </div>
+          {enrollments.length > 0 && sessions.length > 0 ? (
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 border border-slate-700 shadow-md md:col-span-1 lg:col-span-2 text-white relative overflow-hidden group">
+               <span className="material-symbols-outlined text-[120px] absolute -right-6 -bottom-6 text-slate-700/30 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">calendar_month</span>
                
-               <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold border border-slate-600">MR</div>
-                 <div className="text-xs">
-                   <p className="text-slate-300">Instructor</p>
-                   <p className="font-bold text-white">Mark Reyes</p>
+               <h2 className="font-extrabold text-lg flex items-center gap-2 mb-6 relative z-10">
+                 <span className="material-symbols-outlined text-emerald-400">event_upcoming</span>
+                 Next Session
+               </h2>
+               
+               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/10 relative z-10 hover:bg-white/15 transition-colors cursor-pointer">
+                 <div className="flex items-start justify-between">
+                   <div>
+                     <p className="text-xs font-semibold text-emerald-400 mb-1">{sessions[0].notes || "Driving Session"}</p>
+                     <p className="text-xl font-bold text-white tracking-tight mb-0.5">
+                       {new Date(sessions[0].date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                     </p>
+                     <p className="text-sm text-slate-300">
+                       {new Date(`1970-01-01T${sessions[0].start_time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                       {new Date(`1970-01-01T${sessions[0].end_time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                     </p>
+                   </div>
+                   <div className="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl">
+                     <span className="material-symbols-outlined">schedule</span>
+                   </div>
+                 </div>
+                 
+                 <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold border border-slate-600">
+                     {sessions[0].instructor_name ? sessions[0].instructor_name.substring(0, 2).toUpperCase() : "IN"}
+                   </div>
+                   <div className="text-xs">
+                     <p className="text-slate-300">Instructor</p>
+                     <p className="font-bold text-white">{sessions[0].instructor_name || "Assigned Instructor"}</p>
+                   </div>
                  </div>
                </div>
-             </div>
-          </div>
+            </div>
+          ) : enrollments.length > 0 ? (
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 border border-slate-700 shadow-md md:col-span-1 lg:col-span-2 text-white relative overflow-hidden flex flex-col justify-center items-center text-center">
+               <span className="material-symbols-outlined text-[64px] text-slate-700 mb-4">event_busy</span>
+               <h2 className="font-extrabold text-lg text-white mb-2">No Upcoming Sessions</h2>
+               <p className="text-sm text-slate-400 max-w-[250px]">You don't have any scheduled sessions at the moment. Please wait for the dispatcher to assign one.</p>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-slate-200 to-slate-100 rounded-3xl p-6 border border-slate-300 shadow-sm md:col-span-1 lg:col-span-2 text-slate-500 relative overflow-hidden flex flex-col justify-center items-center text-center opacity-70">
+               <span className="material-symbols-outlined text-[64px] text-slate-300 mb-4">lock</span>
+               <h2 className="font-extrabold text-lg text-slate-600 mb-2">Schedule Locked</h2>
+               <p className="text-sm text-slate-500 max-w-[250px]">Enroll in a course to view and manage your driving sessions.</p>
+            </div>
+          )}
 
           {/* Payment & Balances */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
@@ -257,57 +264,46 @@ export default function StudentDashboardClient({ user, courses = [], enrollments
                  Pre-requisites
                </h2>
                <span className="text-xs font-bold text-slate-500">
-                 {medicalStatus === "VERIFIED" ? "0 of 3 Pending" : "1 of 3 Pending"}
+                 Needs Cashier Verification
                </span>
              </div>
              
              <div className="space-y-3">
                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
                  <div className="flex items-center gap-3">
-                   <span className="material-symbols-outlined text-slate-700 text-xl">verified</span>
+                   <span className={`material-symbols-outlined text-xl ${enrollments[0]?.psa_verified ? 'text-emerald-500' : 'text-slate-400'}`}>
+                     {enrollments[0]?.psa_verified ? 'verified' : 'pending_actions'}
+                   </span>
                    <span className="text-sm font-semibold text-slate-800">PSA Birth Certificate</span>
                  </div>
-                 <span className="text-[10px] font-bold text-slate-600 bg-slate-200 px-2 py-0.5 rounded">VERIFIED</span>
+                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${enrollments[0]?.psa_verified ? 'text-emerald-700 bg-emerald-100' : 'text-slate-600 bg-slate-200'}`}>
+                   {enrollments[0]?.psa_verified ? 'VERIFIED' : 'PENDING'}
+                 </span>
                </div>
                
                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
                  <div className="flex items-center gap-3">
-                   <span className="material-symbols-outlined text-slate-700 text-xl">verified</span>
+                   <span className={`material-symbols-outlined text-xl ${enrollments[0]?.id_verified ? 'text-emerald-500' : 'text-slate-400'}`}>
+                     {enrollments[0]?.id_verified ? 'verified' : 'pending_actions'}
+                   </span>
                    <span className="text-sm font-semibold text-slate-800">Valid ID (Government)</span>
                  </div>
-                 <span className="text-[10px] font-bold text-slate-600 bg-slate-200 px-2 py-0.5 rounded">VERIFIED</span>
+                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${enrollments[0]?.id_verified ? 'text-emerald-700 bg-emerald-100' : 'text-slate-600 bg-slate-200'}`}>
+                   {enrollments[0]?.id_verified ? 'VERIFIED' : 'PENDING'}
+                 </span>
                </div>
 
-               {medicalStatus === "PENDING" && (
-                 <div className="flex items-center justify-between p-3 rounded-xl bg-white border-2 border-dashed border-slate-300">
-                   <div className="flex items-center gap-3">
-                     <span className="material-symbols-outlined text-slate-400 text-xl">upload_file</span>
-                     <span className="text-sm font-semibold text-slate-600">Medical Certificate</span>
-                   </div>
-                   <button onClick={handleUploadMedical} className="text-[10px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-2xs">
-                     UPLOAD FILE
-                   </button>
+               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                 <div className="flex items-center gap-3">
+                   <span className={`material-symbols-outlined text-xl ${enrollments[0]?.medical_verified ? 'text-emerald-500' : 'text-slate-400'}`}>
+                     {enrollments[0]?.medical_verified ? 'verified' : 'pending_actions'}
+                   </span>
+                   <span className="text-sm font-semibold text-slate-800">Medical Certificate</span>
                  </div>
-               )}
-
-               {medicalStatus === "UPLOADING" && (
-                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
-                   <div className="flex items-center gap-3">
-                     <span className="material-symbols-outlined text-indigo-500 text-xl animate-spin">sync</span>
-                     <span className="text-sm font-semibold text-indigo-900">Processing Document...</span>
-                   </div>
-                 </div>
-               )}
-
-               {medicalStatus === "VERIFIED" && (
-                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
-                   <div className="flex items-center gap-3">
-                     <span className="material-symbols-outlined text-slate-700 text-xl">verified</span>
-                     <span className="text-sm font-semibold text-slate-800">Medical Certificate</span>
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-600 bg-slate-200 px-2 py-0.5 rounded">VERIFIED</span>
-                 </div>
-               )}
+                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${enrollments[0]?.medical_verified ? 'text-emerald-700 bg-emerald-100' : 'text-slate-600 bg-slate-200'}`}>
+                   {enrollments[0]?.medical_verified ? 'VERIFIED' : 'PENDING'}
+                 </span>
+               </div>
              </div>
           </div>
 
@@ -329,15 +325,7 @@ export default function StudentDashboardClient({ user, courses = [], enrollments
                  </div>
                </button>
                
-               <a href="mailto:admin@stjosephcupertino.ph" className="w-full p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-300 hover:bg-slate-100 transition-all flex items-center gap-3 text-left group">
-                 <div className="p-2 bg-white rounded-lg shadow-2xs group-hover:shadow-sm flex-shrink-0">
-                   <span className="material-symbols-outlined text-[18px] text-sky-600">support_agent</span>
-                 </div>
-                 <div>
-                   <p className="text-xs font-bold text-slate-800">Contact Admin</p>
-                   <p className="text-[10px] text-slate-500">Message the registrar</p>
-                 </div>
-               </a>
+               
              </div>
           </div>
 

@@ -36,6 +36,7 @@ export default async function StudentDashboard() {
 
   // Fetch Payments for the student's enrollments
   let payments = [];
+  let sessions = [];
   if (enrollments && enrollments.length > 0) {
     const enrollmentIds = enrollments.map(e => e.id);
     const { data: pData } = await supabase
@@ -44,6 +45,15 @@ export default async function StudentDashboard() {
       .in('enrollment_id', enrollmentIds)
       .order('created_at', { ascending: false });
     payments = pData || [];
+
+    const { data: sData } = await supabase
+      .from('sessions')
+      .select('*')
+      .in('enrollment_id', enrollmentIds)
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true });
+    sessions = sData || [];
   }
 
   return (
@@ -52,6 +62,7 @@ export default async function StudentDashboard() {
       courses={courses || []}
       enrollments={enrollments || []}
       payments={payments}
+      sessions={sessions}
     />
   );
 }
