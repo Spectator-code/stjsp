@@ -297,7 +297,8 @@ export default function StudentsClient({ students }) {
                   const pct = hoursReq > 0 ? Math.min(100, Math.round((hoursDone / hoursReq) * 100)) : 0;
                   
                   return (
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-xs">
+                    <>
+                      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-xs">
                       <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Training Progress</div>
                       <div className="space-y-4">
                         <div>
@@ -309,7 +310,6 @@ export default function StudentsClient({ students }) {
                             <div className={`h-2 rounded-full ${pct >= 100 ? 'bg-emerald-500' : 'bg-slate-900'}`} style={{ width: `${pct}%` }}></div>
                           </div>
                         </div>
-                      </div>
                       </div>
                     </div>
 
@@ -370,7 +370,7 @@ export default function StudentsClient({ students }) {
                         </div>
                       </div>
                     </div>
-                  </>;
+                  </>
                 })() : (
                   <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-xs text-center text-sm text-slate-500">
                     No active enrollments for this student.
