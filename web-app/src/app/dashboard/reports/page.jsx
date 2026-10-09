@@ -1,4 +1,6 @@
 "use client";
+import HeaderAvatar from "../../components/HeaderAvatar";
+
 import { useEffect } from "react";
 import Link from "next/link";
 
