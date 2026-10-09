@@ -59,7 +59,12 @@ export async function POST(req) {
       .eq('id', data.user.id)
       .single();
 
-    const role = profileData?.role || data.user?.user_metadata?.role || 'student';
+    let role = profileData?.role || data.user?.user_metadata?.role || 'student';
+
+    // Temporary workaround for profiles_role_check constraint rejecting 'instructor'
+    if (email === 'instructor@stjosephcupertino.ph' || email === 'danilo@stjosephcupertino.ph' || data.user?.user_metadata?.role === 'instructor') {
+      role = 'instructor';
+    }
 
     return NextResponse.json({ success: true, user: data.user, role });
   } catch (error) {
