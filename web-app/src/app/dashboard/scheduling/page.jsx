@@ -42,6 +42,7 @@ export default async function Scheduling() {
     .order('start_time', { ascending: true });
 
   // Fetch enrollments with profiles
+  const { data: instructors } = await supabase.from('profiles').select('*').in('role', ['staff', 'instructor']);
   const { data: enrollments } = await supabase
     .from('enrollments')
     .select('status, id, profiles(first_name, last_name, mobile_number), courses(name, price)');
@@ -54,6 +55,7 @@ export default async function Scheduling() {
       sessions={sessions || []}
       activeEnrollments={activeEnrollments}
       activeStudents={activeStudentsCount}
+      instructors={instructors || []}
       pendingBalancesCount={0}
     />
   );

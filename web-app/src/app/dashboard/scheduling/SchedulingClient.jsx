@@ -4,7 +4,7 @@ import HeaderAvatar from "../../../components/HeaderAvatar";
 import { useEffect } from "react";
 import Link from "next/link";
 
-export default function SchedulingClient({ sessions, activeEnrollments, activeStudents, pendingBalancesCount }) {
+export default function SchedulingClient({ sessions, activeEnrollments, activeStudents, pendingBalancesCount, instructors = [] }) {
 
   const getGridStyle = (startTimeStr, endTimeStr) => {
     let startHour = 8;
@@ -138,13 +138,10 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
     }
   }
 
-  async function reassignInstructor() {
+  async function confirmReassignInstructor() {
     const sessionId = window.currentSelectedSessionId;
-    if (!sessionId) { alert('Please select a session on the grid first.'); return; }
-    
-    const newInstructor = prompt('Enter the name of the new instructor to reassign:');
-    if (!newInstructor) return;
-    
+    const newInstructor = document.getElementById('reassignInstructorSelect').value;
+    if (!sessionId || !newInstructor) return;
     try {
       const res = await fetch('/api/sessions', {
         method: 'PATCH',
@@ -153,10 +150,17 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
       });
       if (!res.ok) throw new Error('Failed to update instructor');
       showSchedToast('Instructor Reassigned', 'Successfully updated the designated instructor.');
+      setShowReassignInstructorModal(false);
       setTimeout(() => window.location.reload(), 1500);
     } catch(e) {
       alert('Error updating session: ' + e.message);
     }
+  }
+
+  function reassignInstructor() {
+    const sessionId = window.currentSelectedSessionId;
+    if (!sessionId) { alert('Please select a session on the grid first.'); return; }
+    setShowReassignInstructorModal(true);
   }
 
   async function rescheduleSession() {
@@ -827,10 +831,11 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
           <label htmlFor="modalInstructorSelect" className="block font-bold text-slate-700 mb-1">Assigned Instructor</label>
           <select id="modalInstructorSelect" required defaultValue="" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
             <option value="" disabled>-- Select Instructor --</option>
-            <option value="Inst. Danilo Cruz">Inst. Danilo Cruz</option>
-            <option value="Engr. Roberto Dalisay">Engr. Roberto Dalisay</option>
-            <option value="Inst. Carlo Mendoza">Inst. Carlo Mendoza</option>
-            <option value="Inst. Joel Santos">Inst. Joel Santos</option>
+            {instructors.map(inst => (
+              <option key={inst.id} value={`${inst.first_name} ${inst.last_name}`}>
+                {inst.first_name} {inst.last_name}
+              </option>
+            ))}
           </select>
         </div>
         <div>

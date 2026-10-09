@@ -3,8 +3,30 @@ import HeaderAvatar from "../../../components/HeaderAvatar";
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { createBrowserClient } from "@supabase/ssr";
+import { useState } from "react";
 
 export default function Reports() {
+  const [completedCerts, setCompletedCerts] = useState([]);
+  
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+    
+    async function fetchCerts() {
+      const { data } = await supabase
+        .from('enrollments')
+        .select('*, profiles(*), courses(*)')
+        .eq('status', 'completed')
+        .order('id', { ascending: false });
+        
+      if(data) setCompletedCerts(data);
+    }
+    
+    fetchCerts();
+  }, []);
   function showReportToast(title, msg) {
     const toast = document.getElementById('reportToast');
     if (!toast) return;
@@ -30,7 +52,7 @@ export default function Reports() {
   }
 
   function syncLTMS() {
-    showReportToast('Government Portal Direct Gateway', 'Connected to regional server. All 124 records validated and synchronized with zero errors.');
+    showReportToast('Government Portal Direct Gateway', 'Connected to regional server. All {completedCerts.length} records validated and synchronized with zero errors.');
   }
 
   function revokeCertificate(student, serial) {
@@ -71,7 +93,7 @@ export default function Reports() {
     const b2 = document.getElementById('repPageBtn2');
     if (b2) b2.className = page === 2 ? 'px-2 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold';
     const rpl = document.getElementById('reportPageLabel');
-    if (rpl) rpl.textContent = 'Showing ' + (page === 1 ? '3 of 124' : '6 of 124') + ' Accredited Certificates • Tagum Campus';
+    if (rpl) rpl.textContent = 'Showing ' + (page === 1 ? '3 of {completedCerts.length}' : '6 of {completedCerts.length}') + ' Accredited Certificates • Tagum Campus';
     showReportToast('Registry Page Switched', 'Viewing certificate registry batch ' + page + '.');
   }
 
@@ -261,7 +283,7 @@ export default function Reports() {
             </div>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">124</span>
+            <span className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">{completedCerts.length}</span>
             <span className="text-xs font-semibold text-emerald-600">This Month</span>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
@@ -282,7 +304,7 @@ export default function Reports() {
             </div>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">124<span className="text-sm font-normal text-slate-400">/124</span></span>
+            <span className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">{completedCerts.length}<span className="text-sm font-normal text-slate-400">/{completedCerts.length}</span></span>
             <span className="text-xs font-bold text-emerald-600">100% Synced</span>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-emerald-600 font-semibold">
@@ -387,7 +409,7 @@ export default function Reports() {
         </div>
 
         <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-4 no-print">
-          <span id="reportPageLabel">Showing 3 of 124 Accredited Certificates • Tagum Campus</span>
+          <span id="reportPageLabel">Showing 3 of {completedCerts.length} Accredited Certificates • Tagum Campus</span>
           <div className="flex items-center gap-1">
             <button onClick={() => {window.shiftReportPage(1)}} id="repPageBtn1" className="px-2 py-1 rounded bg-slate-900 text-white font-semibold">1</button>
             <button onClick={() => {window.shiftReportPage(2)}} id="repPageBtn2" className="px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 transition-colors text-slate-700 font-semibold">2</button>

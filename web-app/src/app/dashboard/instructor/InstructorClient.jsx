@@ -26,7 +26,9 @@ export default function InstructorClient({ initialSessions, instructorName, prof
         uniqueStudents.push({
           profile: s.enrollments.profiles,
           course: s.enrollments.courses,
-          sessionCount: mySessions.filter(ms => ms.enrollments?.id === s.enrollments.id).length
+          sessionCount: mySessions.filter(ms => ms.enrollments?.id === s.enrollments.id).length,
+          enrollmentId: s.enrollments.id,
+          status: s.enrollments.status
         });
       }
     }
@@ -39,6 +41,19 @@ export default function InstructorClient({ initialSessions, instructorName, prof
     return acc + ((end - start) / (1000 * 60 * 60));
   }, 0);
 
+  async function markCourseComplete(enrollmentId, stName) {
+    if(!confirm(`Are you sure you want to mark ${stName}'s course as completed and issue their certificate?`)) return;
+    try {
+      const res = await fetch(`/api/enrollments/${enrollmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      if(res.ok) { alert('Course marked completed! Certificate issued.'); window.location.reload(); }
+      else alert('Failed to update.');
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+  
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
@@ -203,9 +218,20 @@ export default function InstructorClient({ initialSessions, instructorName, prof
                             <p className="text-[10px] font-semibold text-slate-500 truncate uppercase tracking-wider">{st.course?.name}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                           <span className="text-[10px] font-bold text-slate-400 block mb-0.5">SESSIONS</span>
-                           <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">{st.sessionCount}</span>
+                        <div className="text-right flex flex-col items-end gap-2">
+                           <div>
+                             <span className="text-[10px] font-bold text-slate-400 block mb-0.5">SESSIONS</span>
+                             <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">{st.sessionCount}</span>
+                           </div>
+                           {st.status !== 'completed' ? (
+                             <button onClick={(e) => { e.stopPropagation(); markCourseComplete(st.enrollmentId, st.profile.first_name); }} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-bold rounded shadow-sm transition-colors">
+                               Issue Certificate
+                             </button>
+                           ) : (
+                             <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] uppercase font-bold rounded flex items-center gap-1">
+                               <span className="material-symbols-outlined text-[12px]">verified</span> Certified
+                             </span>
+                           )}
                         </div>
                       </div>
                     </li>
