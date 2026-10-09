@@ -4,9 +4,9 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
-    const { courseId, paymentScheme } = await request.json();
+    const { enrollmentId, amount, paymentMethod, orNumber } = await request.json();
     
-    if (!courseId || !paymentScheme) {
+    if (!enrollmentId || !amount || !paymentMethod) {
       return NextResponse.json({ success: false, error: "Missing parameters" }, { status: 400 });
     }
 
@@ -29,31 +29,13 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    // Generate a reference code like SJ-24-XXXX
-    
-    const { data: existing, error: checkError } = await supabase
-      .from('enrollments')
-      .select('id')
-      .eq('student_id', user.id)
-      .eq('course_id', courseId)
-      .in('status', ['pending', 'active'])
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json({ success: false, error: 'You are already enrolled in this course.' }, { status: 400 });
-    }
-
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const refCode = `SJ-24-${randomSuffix}`;
-
-    const { data, error } = await supabase.from('enrollments').insert([
+    const { data, error } = await supabase.from('payments').insert([
       {
-        student_id: user.id,
-        course_id: courseId,
-        payment_scheme: paymentScheme,
-        schedule_batch: 'Batch-A', // Default batch for now
-        ref_code: refCode,
-        status: 'pending'
+        enrollment_id: enrollmentId,
+        amount: Number(amount),
+        payment_method: paymentMethod,
+        or_number: orNumber,
+        status: 'completed' // Assume cashier payment is automatically completed
       }
     ]).select();
 

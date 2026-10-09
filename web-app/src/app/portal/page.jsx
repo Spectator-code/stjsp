@@ -8,7 +8,7 @@ export default function Portal() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("enroll");
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordValue, setPasswordValue] = useState("admin2024");
+  const [passwordValue, setPasswordValue] = useState("");
   const [flipKey, setFlipKey] = useState(0);
   const [flipDirection, setFlipDirection] = useState("login");
   const [selectedCourse, setSelectedCourse] = useState("TDC");
@@ -68,18 +68,49 @@ export default function Portal() {
       document.body.removeAttribute("data-print-target");
     };
     window.addEventListener("afterprint", handleAfterPrint);
+
+    // Auto-redirect if already logged in
+    const checkSession = async () => {
+      try {
+        const res = await fetch("/api/auth/session");
+        const data = await res.json();
+        if (data.user) {
+          const role = data.user?.user_metadata?.role;
+          if (role === "admin" || role === "sysadmin" || role === "registrar") {
+            router.push("/dashboard/operations");
+          } else if (role === "cashier") {
+            router.push("/dashboard/tuition");
+          } else if (role === "dispatcher") {
+            router.push("/dashboard/scheduling");
+          } else if (role === "fleet") {
+            router.push("/dashboard/fleet");
+          } else {
+            router.push("/dashboard/student");
+          }
+        }
+      } catch (err) {}
+    };
+    checkSession();
+
     return () => {
       window.removeEventListener("afterprint", handleAfterPrint);
     };
   }, [router]);
 
-  const handleEnrollmentSubmit = (e) => {
+  const handleEnrollmentSubmit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
     const first = form.firstName?.value?.trim() || "Student";
     const last = form.lastName?.value?.trim() || "";
+    const email = form.email?.value?.trim() || "";
+    const password = form.password?.value || "";
     const batch = form.scheduleBatch?.value || "Weekday Regular (Monday – Wednesday)";
     const payment = form.paymentScheme?.value || "Full Payment";
+
+    if (!email || !password) {
+      alert("Please provide an email and password to create an account.");
+      return;
+    }
 
     const courseLabels = {
       TDC: "Theoretical (TDC - 15 Hours)",
@@ -94,23 +125,67 @@ export default function Portal() {
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const refCode = `SJDS-2024-${randomNum}`;
 
-    const finalizeEnrollment = () => {
-      setVoucherData({
-        refCode,
-        name: applicantName,
-        course: courseName,
-        batch,
-        payment,
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, firstName: first, lastName: last, role: "student" }),
       });
-      setIsVoucherOpen(true);
-    };
+      const data = await res.json();
+      if (!data.success) {
+        alert("Registration failed: " + data.error);
+        return;
+      }
+    } catch (err) {
+      alert("Registration error: " + err.message);
+      return;
+    }
 
-    finalizeEnrollment();
+    setVoucherData({
+      refCode,
+      name: applicantName,
+      course: courseName,
+      batch,
+      payment,
+    });
+    setIsVoucherOpen(true);
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    router.push("/dashboard/operations");
+    const form = e.currentTarget;
+    const email = form.loginEmail?.value;
+    const password = form.loginPassword?.value;
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: email, password }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        const role = data.user?.user_metadata?.role;
+        if (role === "admin" || role === "sysadmin" || role === "registrar") {
+          router.push("/dashboard/operations");
+        } else if (role === "cashier") {
+          router.push("/dashboard/tuition");
+        } else if (role === "dispatcher") {
+          router.push("/dashboard/scheduling");
+        } else if (role === "fleet") {
+          router.push("/dashboard/fleet");
+        } else if (role === "instructor" || role === "staff") {
+          router.push("/dashboard/instructor");
+        } else {
+          router.push("/dashboard/student");
+        }
+      } else {
+        alert("Login failed: " + data.error);
+      }
+    } catch (err) {
+      alert("Login failed: " + err.message);
+    }
   };
 
   const quickLogin = (role) => {
@@ -182,7 +257,7 @@ export default function Portal() {
               }`}
           >
             <span className="material-symbols-outlined text-base sm:text-lg text-slate-800">lock</span>
-            Staff Login
+            Account Login
           </button>
         </div>
 
@@ -194,9 +269,7 @@ export default function Portal() {
             <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                    LTO LTMS Direct Registration
-                  </span>
+
                   <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider bg-slate-100 border border-slate-200 px-2 py-0.5 rounded flex items-center gap-1">
                     <span className="material-symbols-outlined text-xs text-amber-600">shield_lock</span> RA 10173 Data Privacy Protected
                   </span>
@@ -206,7 +279,7 @@ export default function Portal() {
                 </h1>
                 <p className="text-xs text-slate-500 mt-1 max-w-xl">
                   Please fill out your official details accurately. All submissions are recorded in the St. Joseph Cupertino
-                  academic roster and synchronized with LTO requirements.
+                  academic roster and synchronized with Official requirements.
                 </p>
               </div>
               <div className="hidden sm:flex flex-col items-end text-right shrink-0">
@@ -218,7 +291,7 @@ export default function Portal() {
                   onClick={() => handleTabChange("login")}
                   className="mt-2 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 shadow-2xs"
                 >
-                  <span className="material-symbols-outlined text-xs">lock</span> Staff Login Portal →
+                  <span className="material-symbols-outlined text-xs">lock</span> Account Login →
                 </button>
               </div>
             </div>
@@ -352,6 +425,34 @@ export default function Portal() {
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Create Password <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      required
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:border-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Confirm Password <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      required
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:border-slate-900"
+                    />
+                  </div>
+                </div>
 
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
@@ -398,7 +499,7 @@ export default function Portal() {
                     2
                   </span>
                   <div>
-                    <h2 className="font-display font-bold text-sm text-slate-900">Course Selection & LTO License Goal</h2>
+                    <h2 className="font-display font-bold text-sm text-slate-900">Course Selection & Official License Goal</h2>
                     <p className="text-[11px] text-slate-400">
                       Select the theoretical or practical course package you are registering for.
                     </p>
@@ -522,7 +623,7 @@ export default function Portal() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">LTO LTMS Client ID (Optional)</label>
+                    <label className="block font-semibold text-slate-700 mb-1">Government Portal Client ID (Optional)</label>
                     <input
                       type="text"
                       id="ltmsId"
@@ -622,7 +723,7 @@ export default function Portal() {
                     </label>
                     <label className="flex items-center gap-2">
                       <input type="checkbox" defaultChecked className="text-slate-900 rounded focus:ring-slate-900" />
-                      <span>LTO Medical Exam Slip</span>
+                      <span>Official Medical Exam Slip</span>
                     </label>
                   </div>
                 </div>
@@ -653,7 +754,7 @@ export default function Portal() {
                     >
                       <option>Facebook Page / Online</option>
                       <option>Friend / Relative Referral</option>
-                      <option>LTO Tagum District Office recommendation</option>
+                      <option>Official Tagum District Office recommendation</option>
                       <option>Campus Signboard / Walk-in</option>
                     </select>
                   </div>
@@ -663,7 +764,7 @@ export default function Portal() {
               {/* Submit Button */}
               <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-[11px] text-slate-400 text-center sm:text-left">
-                  By submitting, you certify that the information entered is accurate under LTO regulations.
+                  By submitting, you certify that the information entered is accurate under Official regulations.
                 </p>
                 <button
                   type="submit"
@@ -687,10 +788,10 @@ export default function Portal() {
                   <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-12 w-auto object-contain mx-auto" />
                 </div>
                 <h2 className="font-display font-extrabold text-xl sm:text-2xl text-slate-900 tracking-tight">
-                  Management Suite Login
+                  Portal Login
                 </h2>
                 <p className="text-xs text-slate-500 font-normal">
-                  Authorized Faculty & Administrative Access
+                  Sign in to access your dashboard
                 </p>
               </div>
 
@@ -702,9 +803,8 @@ export default function Portal() {
                     id="loginEmail"
                     name="loginEmail"
                     required
-                    defaultValue="maria.santos@stjosephcupertino.ph"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/60 border border-slate-300 text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-colors"
-                    placeholder="admin@stjosephcupertino.ph"
+                    placeholder="name@example.com"
                   />
                 </div>
 
@@ -792,70 +892,7 @@ export default function Portal() {
                 </button>
               </div>
 
-              {/* 1-Click Demo Accounts for Capstone Presentation */}
-              <div className="pt-4 border-t border-slate-100 space-y-2.5">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
-                  Presentation 1-Click Demo Accounts
-                </p>
 
-                <div className="space-y-1.5">
-                  <button
-                    type="button"
-                    onClick={() => quickLogin("registrar")}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-between text-left text-xs group"
-                  >
-                    <div>
-                      <p className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">Maria Elena Santos</p>
-                      <p className="text-[10px] text-slate-500">Registrar & Operations Admin</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs group-hover:bg-slate-900 group-hover:text-white transition-all">
-                      Operations →
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => quickLogin("dispatcher")}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-between text-left text-xs group"
-                  >
-                    <div>
-                      <p className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">Danilo Reyes</p>
-                      <p className="text-[10px] text-slate-500">Chief Dispatcher & Scheduling</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs group-hover:bg-slate-900 group-hover:text-white transition-all">
-                      Scheduling →
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => quickLogin("fleet")}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-between text-left text-xs group"
-                  >
-                    <div>
-                      <p className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">Roberto Morales</p>
-                      <p className="text-[10px] text-slate-500">Fleet & Safety Officer</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs group-hover:bg-slate-900 group-hover:text-white transition-all">
-                      Fleet →
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => quickLogin("cashier")}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-between text-left text-xs group"
-                  >
-                    <div>
-                      <p className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">Ana Teresa Perez</p>
-                      <p className="text-[10px] text-slate-500">Tuition & Payments Cashier</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs group-hover:bg-slate-900 group-hover:text-white transition-all">
-                      Tuition →
-                    </span>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -876,7 +913,7 @@ export default function Portal() {
                 <img src="/assets/images/logo.png" alt="Logo" className="h-8 w-auto object-contain" />
                 <span className="font-display font-extrabold text-sm text-slate-900 tracking-tight">ST. JOSEPH CUPERTINO DRIVING SCHOOL</span>
               </div>
-              <p className="text-[10px] text-slate-600 font-medium">Tagum City Main Campus • Pioneer Ave • LTO Accreditation No. 11-04-2023</p>
+              <p className="text-[10px] text-slate-600 font-medium">Tagum City Main Campus • St. Pio Building, Purok Magsanoc, Mankilam • LTO Accreditation No. DS-2020-00019-11</p>
               <p className="text-[11px] font-bold text-slate-900 uppercase tracking-wider mt-1">Official Student Admission Voucher Slip</p>
             </div>
 

@@ -1,14 +1,22 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Index() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/session').then(res => res.json()).then(data => {
+      if (data.user) setIsLoggedIn(true);
+    }).catch(() => {});
+  }, []);
+
   const galleryItems = [
     {
       src: '/assets/images/photo_2026-10-07_16-32-47.jpg',
       category: 'fleet',
       tag: 'Official Fleet',
       title: 'Official Dual-Control Training Fleet & Campus',
-      desc: 'Our fleet of dual-control sedans (Toyota Vios & Hyundai Accent) stationed at the St. Joseph Cupertino Driving School campus. Accredited by the Land Transportation Office (LTO). Open daily Monday to Sunday, 8:00 AM – 5:00 PM.'
+      desc: 'Our fleet of dual-control sedans (Toyota Vios & Hyundai Accent) stationed at the St. Joseph Cupertino Driving School campus. Accredited by the Government Regulatory Office. Open daily Monday to Sunday, 8:00 AM – 5:00 PM.'
     },
     {
       src: '/assets/images/photo_2026-10-07_16-32-40.jpg',
@@ -22,7 +30,7 @@ export default function Index() {
       category: 'mc',
       tag: 'Motorcycle PDC-MC',
       title: 'Two-Wheel Defensive Riding & Road Confidence',
-      desc: 'LTO-accredited practical motorcycle instruction. Students master balance drills, helmet & safety gear compliance, hesitation-free overtaking, proper parking, and defensive navigation.'
+      desc: 'Government-Accredited practical motorcycle instruction. Students master balance drills, helmet & safety gear compliance, hesitation-free overtaking, proper parking, and defensive navigation.'
     },
     {
       src: '/assets/images/photo_2026-10-07_16-32-50.jpg',
@@ -139,8 +147,7 @@ export default function Index() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span
-              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">LTO
-              ACCREDITED</span>
+              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">ST. JOSEPH APPROVED</span>
             <span className="text-slate-300">St. Joseph Cupertino Driving School • Tagum City Campus</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
@@ -155,10 +162,10 @@ export default function Index() {
 
       {/* Navigation Bar */}
       <header className="sticky top-0 z-50 glass-header border-b border-slate-200/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 py-3 flex items-center justify-between gap-4">
           <a href="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo"
-              className="h-10 w-10 sm:h-11 sm:w-11 aspect-square rounded-lg object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-200" />
+              className="h-10 sm:h-11 w-auto object-contain group-hover:scale-105 transition-transform duration-200" />
             <div className="hidden sm:flex flex-col">
               <span className="font-display font-extrabold text-[11px] sm:text-xs xl:text-sm text-slate-900 tracking-tight leading-tight whitespace-nowrap">ST.
                 JOSEPH CUPERTINO</span>
@@ -167,34 +174,40 @@ export default function Index() {
           </a>
 
           {/* Desktop Nav */}
-          <nav className="hidden xl:flex items-center gap-3 2xl:gap-5 text-[11px] font-semibold text-slate-600 whitespace-nowrap">
+          <nav className="hidden lg:flex flex-1 items-center justify-center gap-3 lg:gap-4 xl:gap-6 text-[11px] font-semibold text-slate-600 whitespace-nowrap overflow-hidden">
             <a href="#courses" className="hover:text-slate-900 transition-colors">Courses & Fees</a>
-            <a href="#fleet" className="hover:text-slate-900 transition-colors">Safety Fleet</a>
+            <a href="#fleet" className="hover:text-slate-900 transition-colors hidden xl:block">Safety Fleet</a>
             <a href="#gallery" className="hover:text-amber-600 text-slate-800 font-bold transition-colors flex items-center gap-1">
               <span className="material-symbols-outlined text-sm text-amber-500">photo_library</span>
               Training Gallery
             </a>
-            <a href="#process" className="hover:text-slate-900 transition-colors">Admission Steps</a>
+            <a href="#process" className="hover:text-slate-900 transition-colors hidden xl:block">Admission Steps</a>
             <a href="#instructors" className="hover:text-slate-900 transition-colors">Faculty</a>
             <a href="#contact" className="hover:text-slate-900 transition-colors">Our Location</a>
           </nav>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="hidden lg:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-lg">
-              <span className="material-symbols-outlined text-xs text-emerald-600">shield_lock</span>
-              RA 10173 Protected
-            </span>
-            <a href="/portal?tab=login"
-              className="px-3 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors hidden sm:inline-flex items-center gap-1">
-              <span className="material-symbols-outlined text-base">login</span>
-              Staff Login
-            </a>
-            <a href="/portal?tab=enroll"
-              className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold text-xs shadow-sm hover:bg-slate-800 transition-colors flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-sm text-amber-400">edit_note</span>
-              Enroll Online
-            </a>
+            {isLoggedIn ? (
+              <a href="/portal?tab=login"
+                className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold text-xs shadow-sm hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-sm text-emerald-400">dashboard</span>
+                Return to Dashboard
+              </a>
+            ) : (
+              <>
+                <a href="/portal?tab=login"
+                  className="px-3 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors hidden sm:inline-flex items-center gap-1">
+                  <span className="material-symbols-outlined text-base">login</span>
+                  Staff Login
+                </a>
+                <a href="/portal?tab=enroll"
+                  className="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold text-xs shadow-sm hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm text-amber-400">edit_note</span>
+                  Enroll Online
+                </a>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -257,7 +270,7 @@ export default function Index() {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent flex flex-col justify-end p-4">
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-full shadow-xs">
-                        <span className="material-symbols-outlined text-xs">verified</span> LTO Accredited Fleet
+                        <span className="material-symbols-outlined text-xs">verified</span> Official Safety Fleet
                       </span>
                       <span className="text-[10px] font-semibold bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-white flex items-center gap-1">
                         Open 8AM – 5PM
@@ -275,7 +288,7 @@ export default function Index() {
 
                   <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                     <div className="flex items-center gap-2.5">
-                      <img src="/assets/images/logo.png" alt="Logo" className="h-8 w-auto object-contain mix-blend-multiply" />
+                      <img src="/assets/images/logo.png" alt="Logo" className="h-8 w-auto object-contain" />
                       <div>
                         <h3 className="font-display font-bold text-xs text-slate-900">Current Enrollment Intake</h3>
                         <p className="text-[11px] text-slate-500">Batch 48 • Tagum Campus</p>
@@ -349,7 +362,7 @@ export default function Index() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
                 <span className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">99.4%</span>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">LTO Exam Pass Rate</p>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">Official Exam Pass Rate</p>
               </div>
               <div>
                 <span className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">5,200+</span>
@@ -361,7 +374,7 @@ export default function Index() {
               </div>
               <div>
                 <span className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">8 Mentors</span>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">LTO Certified Faculty</p>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">Official Certified Faculty</p>
               </div>
             </div>
           </div>
@@ -379,7 +392,7 @@ export default function Index() {
                 Comprehensive Driving Courses & Clear Tuition Fees
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-2">
-                Strictly compliant with LTO Memorandum Circulars. Includes classroom theory, closed-circuit maneuvers, and
+                Strictly compliant with Official Memorandum Circulars. Includes classroom theory, closed-circuit maneuvers, and
                 defensive road navigation.
               </p>
             </div>
@@ -397,7 +410,7 @@ export default function Index() {
                   </div>
                   <h3 className="font-display font-bold text-lg text-slate-900">Theoretical Driving Course (TDC)</h3>
                   <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                    Required by the LTO before applying for a Student Permit. Covers road courtesy, traffic rules, signs,
+                    Required by the Official before applying for a Student Permit. Covers road courtesy, traffic rules, signs,
                     vehicle safety checks, and defensive driving.
                   </p>
                   <div className="mt-6 pt-4 border-t border-slate-100">
@@ -412,7 +425,7 @@ export default function Index() {
                       className="material-symbols-outlined text-emerald-600 text-sm">check</span> Official TDC Certificate of
                       Completion</li>
                     <li className="flex items-center gap-2"><span
-                      className="material-symbols-outlined text-emerald-600 text-sm">check</span> Direct electronic sync to LTO
+                      className="material-symbols-outlined text-emerald-600 text-sm">check</span> Direct electronic sync to Official
                       LTMS</li>
                   </ul>
                 </div>
@@ -547,7 +560,7 @@ export default function Index() {
                 <h3 className="font-display font-bold text-xl text-slate-900 mt-2">All-in-One: TDC + PDC Car (Sedan) Complete
                   Bundle</h3>
                 <p className="text-xs text-slate-600 mt-1 max-w-xl">Save ₱1,000 when registering your Theoretical and Practical
-                  Driving courses together. Includes full LTO LTMS integration.</p>
+                  Driving courses together. Includes full Government Portal integration.</p>
               </div>
               <div className="flex items-center gap-4 shrink-0">
                 <div className="text-right">
@@ -614,7 +627,7 @@ export default function Index() {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent flex flex-col justify-end p-5 text-white">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-amber-500 text-slate-950 px-3 py-1 rounded-full shadow-xs">
-                        <span className="material-symbols-outlined text-sm">verified</span> LTO Accredited Fleet
+                        <span className="material-symbols-outlined text-sm">verified</span> Official Safety Fleet
                       </span>
                       <span className="text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white">
                         Campus Hours: Mon–Sun 8:00 AM – 5:00 PM
@@ -925,8 +938,8 @@ export default function Index() {
 
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
                 <span className="font-display font-extrabold text-xl text-slate-900">04</span>
-                <h3 className="font-display font-bold text-sm text-slate-900">LTO LTMS Sync & License</h3>
-                <p className="text-slate-500 leading-relaxed">Your completion certificate is uploaded directly to the LTO LTMS
+                <h3 className="font-display font-bold text-sm text-slate-900">Government Portal Sync & License</h3>
+                <p className="text-slate-500 leading-relaxed">Your completion certificate is uploaded directly to the Government Portal
                   portal for license issuance.</p>
               </div>
             </div>
@@ -943,7 +956,7 @@ export default function Index() {
                 className="text-[11px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">Certified
                 Faculty</span>
               <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-3">
-                Patient, LTO-Accredited Mentors
+                Patient, Government-Accredited Mentors
               </h2>
             </div>
 
@@ -955,7 +968,7 @@ export default function Index() {
                   DR</div>
                 <h4 className="font-display font-bold text-sm text-slate-900">Danilo Reyes</h4>
                 <p className="text-amber-700 font-semibold text-[11px]">Chief Practical Instructor</p>
-                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">LTO
+                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">Official
                   ID: INST-2019-041</span>
                 <p className="text-slate-500 pt-2 border-t border-slate-200">Specialist in manual transmission and uphill parking
                   controls.</p>
@@ -967,7 +980,7 @@ export default function Index() {
                   GM</div>
                 <h4 className="font-display font-bold text-sm text-slate-900">Grace Mendoza</h4>
                 <p className="text-amber-700 font-semibold text-[11px]">Senior TDC Lecturer</p>
-                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">LTO
+                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">Official
                   ID: INST-2020-118</span>
                 <p className="text-slate-500 pt-2 border-t border-slate-200">Traffic rules and road safety legislation instructor.
                 </p>
@@ -979,7 +992,7 @@ export default function Index() {
                   RD</div>
                 <h4 className="font-display font-bold text-sm text-slate-900">Engr. Roberto Dalisay</h4>
                 <p className="text-amber-700 font-semibold text-[11px]">Sedan & SUV Specialist</p>
-                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">LTO
+                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">Official
                   ID: INST-9021-088</span>
                 <p className="text-slate-500 pt-2 border-t border-slate-200">Expert in calm instruction for first-time beginner
                   drivers.</p>
@@ -991,7 +1004,7 @@ export default function Index() {
                   AG</div>
                 <h4 className="font-display font-bold text-sm text-slate-900">Allan Garcia</h4>
                 <p className="text-amber-700 font-semibold text-[11px]">Motorcycle Safety Coach</p>
-                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">LTO
+                <span className="inline-block px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200 text-[10px]">Official
                   ID: INST-2022-204</span>
                 <p className="text-slate-500 pt-2 border-t border-slate-200">Two-wheel slalom, curve banking, and road defense
                   mentor.</p>
@@ -1015,13 +1028,13 @@ export default function Index() {
                     <h2 className="font-display text-2xl font-extrabold text-slate-900 tracking-tight mt-3">
                       St. Joseph Cupertino Driving School
                     </h2>
-                    <p className="text-xs text-slate-500 mt-1">Pioneer Avenue, Magugpo Poblacion, Tagum City</p>
+                    <p className="text-xs text-slate-500 mt-1">St. Pio Building, Purok Magsanoc, Mankilam, City of Tagum, Davao del Norte</p>
                   </div>
 
                   <div className="space-y-3 text-xs text-slate-600">
                     <div className="flex items-start gap-3">
                       <span className="material-symbols-outlined text-amber-600 text-lg">location_on</span>
-                      <span>Pioneer Avenue, Magugpo Poblacion, Tagum City, Davao del Norte, 8100</span>
+                      <span>St. Pio Building, Purok Magsanoc, Mankilam, City of Tagum, Davao del Norte, Davao del Norte, 8100</span>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="material-symbols-outlined text-amber-600 text-lg">call</span>
@@ -1136,7 +1149,7 @@ export default function Index() {
                 <span className="font-display font-bold text-sm tracking-tight text-white">ST. JOSEPH CUPERTINO</span>
               </div>
               <p className="text-slate-400 text-xs leading-relaxed">
-                Accredited by the Land Transportation Office (LTO) Central & Regional Office XI. Official Driving Academy in
+                Accredited by the Government Regulatory Office Central & Regional Office XI. Official Driving Academy in
                 Tagum City.
               </p>
             </div>
@@ -1158,13 +1171,13 @@ export default function Index() {
                   Application</a></li>
                 <li><a href="/portal?tab=login" className="hover:text-white">Staff Login</a></li>
                 <li><a href="/dashboard/operations" className="hover:text-white">Operations Suite</a></li>
-                <li><a href="/dashboard/reports" className="hover:text-white">LTO Compliance Portal</a></li>
+                <li><a href="/dashboard/reports" className="hover:text-white">Official Compliance Portal</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-bold text-xs uppercase text-amber-400 tracking-wider mb-3">Campus Office</h4>
-              <p className="text-slate-400">Pioneer Avenue, Magugpo Poblacion, Tagum City</p>
+              <p className="text-slate-400">St. Pio Building, Purok Magsanoc, Mankilam, City of Tagum, Davao del Norte</p>
               <p className="text-slate-400 mt-2">Hotline: (084) 216-8942 / 0917 554 9021</p>
               <p className="text-slate-400">Email: admissions@stjosephcupertino.ph</p>
             </div>

@@ -3,6 +3,63 @@ import { useEffect } from "react";
 import Link from "next/link";
 
 export default function Fleet() {
+  const [vehicles, setVehicles] = require("react").useState([]);
+  const [loading, setLoading] = require("react").useState(true);
+
+  require("react").useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+  async function fetchVehicles() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/vehicles');
+      const data = await res.json();
+      if (data.vehicles) {
+        setVehicles(data.vehicles);
+      }
+    } catch(e) {}
+    setLoading(false);
+  }
+
+  async function handleAddVehicle(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Adding...';
+    }
+
+    const formData = new FormData(e.target);
+    const vName = formData.get('vName');
+    const vPlate = formData.get('vPlate');
+    const vType = formData.get('vType');
+
+    try {
+      const res = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vehicle_name: vName,
+          plate_number: vPlate,
+          vehicle_type: vType
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setVehicles([data.vehicle, ...vehicles]);
+        closeVehicleModal();
+        showFleetToast('Vehicle Added', 'New vehicle registered to the fleet.');
+        e.target.reset();
+      } else {
+        alert(data.error);
+      }
+    } catch(e) {}
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Register Vehicle';
+    }
+  }
   function showFleetToast(title, msg) {
     const toast = document.getElementById('fleetToast');
     if (!toast) return;
@@ -80,14 +137,14 @@ export default function Fleet() {
     const cert = cEl ? cEl.value : '';
 
     closeInstructorModal();
-    showFleetToast('Faculty Accredited', name + ' (' + cert + ') added to official LTO-accredited faculty.');
+    showFleetToast('Faculty Accredited', name + ' (' + cert + ') added to official Government-Accredited faculty.');
   }
 
   function decommissionVehicle(model, plate) {
     if (typeof window !== 'undefined' && window.showConfirmDialog) {
       window.showConfirmDialog({
         title: 'Decommission Training Vehicle',
-        message: 'Are you sure you want to permanently decommission this vehicle? This will immediately remove it from dispatch availability and notify the LTO regional office.',
+        message: 'Are you sure you want to permanently decommission this vehicle? This will immediately remove it from dispatch availability and notify the Official regional office.',
         badge: 'Permanent Decommission',
         type: 'danger',
         confirmText: 'Decommission Unit',
@@ -169,7 +226,7 @@ export default function Fleet() {
     <div className="flex flex-col">
       {/* Logo Header */}
       <div className="h-16 px-5 border-b border-slate-100 flex items-center gap-3">
-        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
+        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-auto object-contain" />
         <div className="flex flex-col min-w-0">
           <span className="font-display text-xs font-extrabold text-slate-900 tracking-tight truncate">ST. JOSEPH CUPERTINO</span>
           <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider truncate">Driving School • Tagum</span>
@@ -181,9 +238,9 @@ export default function Fleet() {
         <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5 text-slate-600">
             <span className="material-symbols-outlined text-sm text-amber-600">location_on</span>
-            <span className="font-medium truncate">Pioneer Ave Campus</span>
+            <span className="font-medium truncate">St. Pio Building, Purok Magsanoc, Mankilam Campus</span>
           </div>
-          <span className="text-[10px] bg-white border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold">LTO 11-04</span>
+          <span className="text-[10px] bg-white border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold">Official 11-04</span>
         </div>
       </div>
 
@@ -220,14 +277,13 @@ export default function Fleet() {
 
           <div className="pt-3 my-2 border-t border-slate-100"></div>
 
-          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
-            <span className="material-symbols-outlined text-base">public</span>
-            Public Website
-          </Link>
-          <Link href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
-            <span className="material-symbols-outlined text-base">logout</span>
-            Sign Out
-          </Link>
+          
+          <form action="/api/auth/logout" method="POST">
+                <button type="submit" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
+                  <span className="material-symbols-outlined text-base">logout</span>
+                  Sign Out
+                </button>
+              </form>
         </nav>
       </div>
     </div>
@@ -236,7 +292,7 @@ export default function Fleet() {
     <div className="p-3 border-t border-slate-100 bg-slate-50/50">
       <div className="p-2.5 rounded-lg bg-white border border-slate-200/80 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 "></span>
           <span className="text-slate-600 font-medium">Database Sync</span>
         </div>
         <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">14 SENSORS OK</span>
@@ -272,10 +328,7 @@ export default function Fleet() {
         <span>RA 10173 Protected</span>
       </div>
 
-      <a href="/" className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors hidden sm:inline-flex items-center gap-1">
-        <span className="material-symbols-outlined text-sm">arrow_back</span>
-        Public Site
-      </a>
+      
 
       {/* Profile */}
       <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
@@ -301,8 +354,8 @@ export default function Fleet() {
             <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">Logistics & Faculty</span>
             <span className="text-slate-300">•</span>
             <span className="text-xs text-emerald-700 flex items-center gap-1 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              LTO Dual-Brake Safety Certification Active
+              <span className="w-2 h-2 rounded-full bg-emerald-500 "></span>
+              Official Dual-Brake Safety Certification Active
             </span>
           </div>
           <h1 className="font-display text-2xl font-extrabold text-slate-900 tracking-tight">Academic Fleet & Instructor Management</h1>
@@ -393,7 +446,7 @@ export default function Fleet() {
             <span className="text-xs font-bold text-emerald-600">Passed Audit</span>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Next LTO Inspection:</span>
+            <span>Next Official Inspection:</span>
             <span className="font-bold text-slate-900">Nov 15, 2024</span>
           </div>
         </div>
@@ -428,7 +481,7 @@ export default function Fleet() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display font-extrabold text-base text-slate-900">ST. JOSEPH CUPERTINO DRIVING SCHOOL</h2>
-              <p className="text-xs text-slate-600">Tagum Main Campus • Pioneer Ave, Tagum City • LTO Accreditation No. 11-04-2023</p>
+              <p className="text-xs text-slate-600">Tagum Main Campus • St. Pio Building, Purok Magsanoc, Mankilam, Tagum City • LTO Accreditation No. DS-2020-00019-11</p>
               <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Official Training Fleet Inventory & Dual-Brake Registry</p>
             </div>
             <div className="text-right text-xs text-slate-500 font-mono">
@@ -444,7 +497,7 @@ export default function Fleet() {
               <h2 className="font-display text-base font-bold text-slate-900">Active Vehicle Inventory & Dual-Control Status</h2>
               <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">14 Units Registered</span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">LTO Registration details, vehicle condition, and dual-control mechanisms.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Official Registration details, vehicle condition, and dual-control mechanisms.</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -480,156 +533,8 @@ export default function Fleet() {
             </thead>
             <tbody id="fleetTableBody" className="divide-y divide-slate-100">
               
-              {/* Vehicle 1 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900">Toyota Vios #01 (Sedan)</div>
-                  <div className="font-mono text-[11px] text-amber-700 font-semibold">ABC-4291</div>
-                  <div className="text-[10px] text-slate-400 font-mono">Chassis: VN12-98401</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-semibold">5-Speed Manual (MT)</span>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-emerald-600 text-xs">check_circle</span>
-                    Dual Brake & Clutch
-                  </div>
-                  <div className="text-[10px] text-slate-400">Certified by LTO Regional Office</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center justify-center">RD</div>
-                    <div>
-                      <div className="font-semibold text-slate-800">Engr. Roberto Dalisay</div>
-                      <div className="text-[10px] text-slate-400">INST-9021</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button type="button" onClick={() => {window.openMaintenanceModal('ABC-4291')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
-                      PMS
-                    </button>
-                    <button type="button" onClick={() => {window.decommissionVehicle('Toyota Vios #01', 'ABC-4291')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Toyota Vios #01">
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              {/* Vehicle 2 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900">Toyota Vios #02 (Sedan)</div>
-                  <div className="font-mono text-[11px] text-amber-700 font-semibold">LAX-4192</div>
-                  <div className="text-[10px] text-slate-400 font-mono">Chassis: VN12-98402</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-semibold">Automatic (CVT)</span>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-emerald-600 text-xs">check_circle</span>
-                    Auxiliary Brake Pedal
-                  </div>
-                  <div className="text-[10px] text-slate-400">Hydraulic auxiliary link</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center justify-center">DR</div>
-                    <div>
-                      <div className="font-semibold text-slate-800">Danilo Reyes</div>
-                      <div className="text-[10px] text-slate-400">INST-2019</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button type="button" onClick={() => {window.openMaintenanceModal('LAX-4192')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
-                      PMS
-                    </button>
-                    <button type="button" onClick={() => {window.decommissionVehicle('Toyota Vios #02', 'LAX-4192')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Toyota Vios #02">
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              {/* Vehicle 3: Toyota Wigo (In PMS) */}
-              <tr className="hover:bg-slate-50/80 transition-colors bg-amber-50/30">
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900">Toyota Wigo #02 (Hatchback)</div>
-                  <div className="font-mono text-[11px] text-amber-700 font-semibold">ZAA-8120</div>
-                  <div className="text-[10px] text-slate-400 font-mono">Chassis: TW98-10044</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-semibold">Automatic (AT)</span>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-amber-700 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-amber-600 text-xs">build</span>
-                    Brake Cable Inspection Due
-                  </div>
-                  <div className="text-[10px] text-slate-400">Tagum AutoCare Service Center</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center justify-center">CM</div>
-                    <div>
-                      <div className="font-semibold text-slate-800">Carlo Mendoza</div>
-                      <div className="text-[10px] text-slate-400">INST-1082</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button type="button" onClick={() => {window.openMaintenanceModal('ZAA-8120')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
-                      PMS
-                    </button>
-                    <button type="button" onClick={() => {window.decommissionVehicle('Toyota Wigo #02', 'ZAA-8120')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Toyota Wigo #02">
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              {/* Vehicle 4: Honda Click Motorcycle */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900">Honda Click 125i #01</div>
-                  <div className="font-mono text-[11px] text-amber-700 font-semibold">MC-9941</div>
-                  <div className="text-[10px] text-slate-400 font-mono">Chassis: HC12-0091</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-semibold">Automatic Scooter</span>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-emerald-600 text-xs">check_circle</span>
-                    LTO Safety Crash Guards
-                  </div>
-                  <div className="text-[10px] text-slate-400">Anti-lock balance bar equipped</div>
-                </td>
-                <td className="py-3.5 px-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center justify-center">AG</div>
-                    <div>
-                      <div className="font-semibold text-slate-800">Allan Garcia</div>
-                      <div className="text-[10px] text-slate-400">INST-2022</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button type="button" onClick={() => {window.openMaintenanceModal('MC-9941')}} className="px-2 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none" title="Schedule PMS">
-                      PMS
-                    </button>
-                    <button type="button" onClick={() => {window.decommissionVehicle('Honda Click 125i #01', 'MC-9941')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Decommission Unit" aria-label="Decommission Honda Click 125i #01">
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                  </div>
-                </td>
+              <tr>
+                <td colSpan="5" className="py-12 text-center text-slate-500 font-medium">No vehicles registered in the fleet database.</td>
               </tr>
 
             </tbody>
@@ -648,7 +553,7 @@ export default function Fleet() {
         <div className="print-footer hidden pt-4 border-t border-slate-300 mt-4 px-4 text-xs text-slate-600">
           <div>
             <p>Fleet Inspection Certified by: <strong>Safety Officer Allan Garcia</strong></p>
-            <p>LTO Accreditation Certificate No. DS-R11-2021-089</p>
+            <p>Official Accreditation Certificate No. DS-R11-2021-089</p>
           </div>
           <div className="text-right">
             <p>Official Fleet & Instructor Compliance Roster</p>
@@ -661,7 +566,7 @@ export default function Fleet() {
       <section className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div>
-            <h3 className="font-display text-sm font-bold text-slate-900">LTO-Accredited Instructor Directory &amp; Ratings</h3>
+            <h3 className="font-display text-sm font-bold text-slate-900">Government-Accredited Instructor Directory &amp; Ratings</h3>
             <p className="text-xs text-slate-500 mt-0.5">Faculty qualifications, valid credentials, active students, and student feedback ratings.</p>
           </div>
           <button onClick={() => {window.openInstructorModal()}} className="px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors flex items-center gap-1 shadow-xs">
@@ -672,64 +577,8 @@ export default function Fleet() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">ON FIELD</span>
-              <span className="text-xs font-bold text-amber-600">★ 4.96</span>
-            </div>
-            <h4 className="font-display font-bold text-xs text-slate-900">Danilo Reyes</h4>
-            <p className="text-[11px] text-slate-500">Chief Practical Instructor</p>
-            <div className="text-[11px] text-slate-600 pt-2 border-t border-slate-200/60 space-y-1">
-              <div><strong>LTO Cert:</strong> INST-2019-041</div>
-              <div><strong>Valid Until:</strong> Oct 2026</div>
-              <div><strong>Active Students:</strong> 18 Enrolled</div>
-              <div><strong>Unit:</strong> Vios #02 (AT)</div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-800">CLASSROOM</span>
-              <span className="text-xs font-bold text-amber-600">★ 4.98</span>
-            </div>
-            <h4 className="font-display font-bold text-xs text-slate-900">Grace Mendoza</h4>
-            <p className="text-[11px] text-slate-500">Senior TDC Lecturer</p>
-            <div className="text-[11px] text-slate-600 pt-2 border-t border-slate-200/60 space-y-1">
-              <div><strong>LTO Cert:</strong> INST-2020-118</div>
-              <div><strong>Valid Until:</strong> Jan 2027</div>
-              <div><strong>Active Students:</strong> 42 in TDC</div>
-              <div><strong>Room:</strong> Hall A Multimedia</div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">ON FIELD</span>
-              <span className="text-xs font-bold text-amber-600">★ 4.92</span>
-            </div>
-            <h4 className="font-display font-bold text-xs text-slate-900">Engr. Roberto Dalisay</h4>
-            <p className="text-[11px] text-slate-500">Manual Trans Specialist</p>
-            <div className="text-[11px] text-slate-600 pt-2 border-t border-slate-200/60 space-y-1">
-              <div><strong>LTO Cert:</strong> INST-9021-088</div>
-              <div><strong>Valid Until:</strong> Aug 2025</div>
-              <div><strong>Active Students:</strong> 14 Enrolled</div>
-              <div><strong>Unit:</strong> Vios #01 (MT)</div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">TRACK</span>
-              <span className="text-xs font-bold text-amber-600">★ 4.90</span>
-            </div>
-            <h4 className="font-display font-bold text-xs text-slate-900">Allan Garcia</h4>
-            <p className="text-[11px] text-slate-500">Motorcycle Riding Coach</p>
-            <div className="text-[11px] text-slate-600 pt-2 border-t border-slate-200/60 space-y-1">
-              <div><strong>LTO Cert:</strong> INST-2022-204</div>
-              <div><strong>Valid Until:</strong> Dec 2025</div>
-              <div><strong>Active Students:</strong> 12 Riders</div>
-              <div><strong>Unit:</strong> Click 125i #01</div>
-            </div>
+          <div className="col-span-1 sm:col-span-2 lg:col-span-4 py-12 text-center text-slate-500 font-medium">
+            No instructors registered.
           </div>
 
         </div>
@@ -746,19 +595,19 @@ export default function Fleet() {
         <button onClick={() => {window.closeVehicleModal()}} aria-label="Close vehicle registration modal" className="text-slate-400 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none rounded"><span className="material-symbols-outlined text-lg">close</span></button>
       </div>
 
-      <form onSubmit={(event) => { window.handleNewVehicle(event) }} className="space-y-3 text-xs">
+      <form onSubmit={handleAddVehicle} className="space-y-3 text-xs">
         <div>
           <label htmlFor="newModel" className="block font-bold mb-1 text-slate-700">Vehicle Make & Model</label>
-          <input type="text" id="newModel" required placeholder="e.g. Toyota Vios 1.3 XE" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
+          <input type="text" id="newModel" name="vName" required placeholder="e.g. Toyota Vios 1.3 XE" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div>
           <label htmlFor="newPlate" className="block font-bold mb-1 text-slate-700">Plate Number</label>
-          <input type="text" id="newPlate" required placeholder="e.g. NAK-1928" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
+          <input type="text" id="newPlate" name="vPlate" required placeholder="e.g. NAK-1928" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="newTrans" className="block font-bold mb-1 text-slate-700">Transmission</label>
-            <select id="newTrans" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+            <select id="newTrans" name="vType" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
               <option>Manual (MT)</option>
               <option>Automatic (AT/CVT)</option>
             </select>
@@ -834,7 +683,7 @@ export default function Fleet() {
   <div id="instructorModal" role="dialog" aria-modal="true" aria-labelledby="instructorModalTitle" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 id="instructorModalTitle" className="font-display font-bold text-sm text-slate-900">Register LTO-Accredited Instructor</h3>
+        <h3 id="instructorModalTitle" className="font-display font-bold text-sm text-slate-900">Register Government-Accredited Instructor</h3>
         <button onClick={() => {window.closeInstructorModal()}} aria-label="Close instructor registration modal" className="text-slate-400 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none rounded"><span className="material-symbols-outlined text-lg">close</span></button>
       </div>
 
@@ -844,7 +693,7 @@ export default function Fleet() {
           <input type="text" id="instName" required placeholder="e.g. Manuel Roxas" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div>
-          <label htmlFor="instCert" className="block font-bold mb-1 text-slate-700">LTO Instructor Certificate ID</label>
+          <label htmlFor="instCert" className="block font-bold mb-1 text-slate-700">Official Instructor Certificate ID</label>
           <input type="text" id="instCert" required placeholder="e.g. INST-2024-512" className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900" />
         </div>
         <div className="grid grid-cols-2 gap-3">

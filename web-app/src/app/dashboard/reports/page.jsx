@@ -28,7 +28,7 @@ export default function Reports() {
   }
 
   function syncLTMS() {
-    showReportToast('LTO LTMS Direct Gateway', 'Connected to regional server. All 124 records validated and synchronized with zero errors.');
+    showReportToast('Government Portal Direct Gateway', 'Connected to regional server. All 124 records validated and synchronized with zero errors.');
   }
 
   function revokeCertificate(student, serial) {
@@ -108,7 +108,7 @@ export default function Reports() {
     <div className="flex flex-col">
       {/* Logo Header */}
       <div className="h-16 px-5 border-b border-slate-100 flex items-center gap-3">
-        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-9 aspect-square rounded-lg object-cover mix-blend-multiply" />
+        <img src="/assets/images/logo.png" alt="St. Joseph Cupertino Logo" className="h-9 w-auto object-contain" />
         <div className="flex flex-col min-w-0">
           <span className="font-display text-xs font-extrabold text-slate-900 tracking-tight truncate">ST. JOSEPH CUPERTINO</span>
           <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider truncate">Driving School • Tagum</span>
@@ -120,9 +120,9 @@ export default function Reports() {
         <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5 text-slate-600">
             <span className="material-symbols-outlined text-sm text-amber-600">location_on</span>
-            <span className="font-medium truncate">Pioneer Ave Campus</span>
+            <span className="font-medium truncate">St. Pio Building, Purok Magsanoc, Mankilam Campus</span>
           </div>
-          <span className="text-[10px] bg-white border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold">LTO 11-04</span>
+          <span className="text-[10px] bg-white border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold">Official 11-04</span>
         </div>
       </div>
 
@@ -159,14 +159,13 @@ export default function Reports() {
 
           <div className="pt-3 my-2 border-t border-slate-100"></div>
 
-          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium">
-            <span className="material-symbols-outlined text-base">public</span>
-            Public Website
-          </Link>
-          <Link href="/portal?tab=login" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
-            <span className="material-symbols-outlined text-base">logout</span>
-            Sign Out
-          </Link>
+          
+          <form action="/api/auth/logout" method="POST">
+                <button type="submit" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium">
+                  <span className="material-symbols-outlined text-base">logout</span>
+                  Sign Out
+                </button>
+              </form>
         </nav>
       </div>
     </div>
@@ -175,8 +174,8 @@ export default function Reports() {
     <div className="p-3 border-t border-slate-100 bg-slate-50/50">
       <div className="p-2.5 rounded-lg bg-white border border-slate-200/80 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="text-slate-600 font-medium">LTO LTMS Direct</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 "></span>
+          <span className="text-slate-600 font-medium">Government Portal Direct</span>
         </div>
         <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">API OK</span>
       </div>
@@ -189,7 +188,7 @@ export default function Reports() {
       <div className="flex items-center gap-2 text-xs">
         <span className="text-slate-400">Tagum Main Campus</span>
         <span className="text-slate-300">/</span>
-        <span className="font-semibold text-slate-800">LTO Compliance, Certifications & Audit Reports</span>
+        <span className="font-semibold text-slate-800">Official Compliance, Certifications & Audit Reports</span>
       </div>
 
       <div className="relative hidden lg:block w-72">
@@ -211,10 +210,7 @@ export default function Reports() {
         <span>RA 10173 Protected</span>
       </div>
 
-      <a href="/" className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors hidden sm:inline-flex items-center gap-1">
-        <span className="material-symbols-outlined text-sm">arrow_back</span>
-        Public Site
-      </a>
+      
 
       {/* Profile */}
       <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
@@ -241,7 +237,7 @@ export default function Reports() {
             <span className="text-slate-300">•</span>
             <span className="text-xs text-slate-500">Memorandum Circular 2021-2287 Standards</span>
           </div>
-          <h1 className="font-display text-2xl font-extrabold text-slate-900 tracking-tight">LTO Compliance, Certifications & Audit Reports</h1>
+          <h1 className="font-display text-2xl font-extrabold text-slate-900 tracking-tight">Official Compliance, Certifications & Audit Reports</h1>
           <p className="text-xs text-slate-500 mt-0.5">Automated student course completion certificates, direct LTMS electronic transmissions, and regulatory audit records.</p>
         </div>
 
@@ -312,7 +308,7 @@ export default function Reports() {
           </div>
           <div className="mt-4 flex items-baseline gap-2">
             <span className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">99.4%</span>
-            <span className="text-xs font-semibold text-slate-500">LTO Tagum</span>
+            <span className="text-xs font-semibold text-slate-500">Official Tagum</span>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
             Top 1 Driving Academy in Davao del Norte
@@ -323,7 +319,7 @@ export default function Reports() {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">School Accreditation</span>
-              <h3 className="text-xs font-bold text-slate-700 mt-0.5">LTO License Status</h3>
+              <h3 className="text-xs font-bold text-slate-700 mt-0.5">Official License Status</h3>
             </div>
             <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
               <span className="material-symbols-outlined text-lg">verified_user</span>
@@ -348,8 +344,8 @@ export default function Reports() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display font-extrabold text-base text-slate-900">ST. JOSEPH CUPERTINO DRIVING SCHOOL</h2>
-              <p className="text-xs text-slate-600">Tagum Main Campus • Pioneer Ave, Tagum City • LTO Accreditation No. 11-04-2023</p>
-              <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Official LTO Compliance &amp; Graduate Certificate Audit Roster</p>
+              <p className="text-xs text-slate-600">Tagum Main Campus • St. Pio Building, Purok Magsanoc, Mankilam, Tagum City • LTO Accreditation No. DS-2020-00019-11</p>
+              <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Official Official Compliance &amp; Graduate Certificate Audit Roster</p>
             </div>
             <div className="text-right text-xs text-slate-500 font-mono">
               <p>Audit Period: <strong>Academic Year 2024</strong></p>
@@ -361,7 +357,7 @@ export default function Reports() {
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 no-print">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-base font-bold text-slate-900">Recent Student Certificates of Completion (LTO Direct)</h2>
+              <h2 className="font-display text-base font-bold text-slate-900">Recent Student Certificates of Completion (Official Direct)</h2>
               <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">Official Endorsements</span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">Certificates generated upon successful completion of required hours and passing marks.</p>
@@ -378,7 +374,7 @@ export default function Reports() {
             <thead className="bg-slate-50/75 border-b border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4 whitespace-nowrap">Certificate Serial</th>
-                <th className="py-3 px-4 whitespace-nowrap">Student Driver & LTO ID</th>
+                <th className="py-3 px-4 whitespace-nowrap">Student Driver & Official ID</th>
                 <th className="py-3 px-4 whitespace-nowrap">Completed Course</th>
                 <th className="py-3 px-4 whitespace-nowrap">Certified Instructor</th>
                 <th className="py-3 px-4 whitespace-nowrap">Grade</th>
@@ -388,79 +384,8 @@ export default function Reports() {
             </thead>
             <tbody id="certTableBody" className="divide-y divide-slate-100">
               
-              {/* Cert 1 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3.5 px-4 font-mono font-bold text-slate-900">TDC-2024-0981</td>
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900">Lorena Grace Villanueva</div>
-                  <div className="text-[10px] text-slate-400 font-mono">LTO ID: D02-23-018593</div>
-                </td>
-                <td className="py-3.5 px-4 font-medium text-slate-800">TDC Theoretical (15 Hours)</td>
-                <td className="py-3.5 px-4 text-slate-600">Grace Mendoza (INST-2020)</td>
-                <td className="py-3.5 px-4 font-bold text-emerald-700">96 / 100</td>
-                <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">SYNCED TO LTMS</span>
-                </td>
-                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button onClick={() => {window.previewCert('Lorena Grace Villanueva', 'Theoretical Driving Course (TDC)', 'TDC-2024-0981', '96/100')}} className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
-                      View
-                    </button>
-                    <button onClick={() => {window.revokeCertificate('Lorena Grace Villanueva', 'TDC-2024-0981')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Revoke Certificate" aria-label="Revoke TDC-2024-0981">
-                      <span className="material-symbols-outlined text-sm">block</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              {/* Cert 2 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3.5 px-4 font-mono font-bold text-slate-900">PDC-2024-0412</td>
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900">Katherine Mae Yap</div>
-                  <div className="text-[10px] text-slate-400 font-mono">LTO ID: D02-24-002194</div>
-                </td>
-                <td className="py-3.5 px-4 font-medium text-slate-800">PDC Sedan Automatic (Code B)</td>
-                <td className="py-3.5 px-4 text-slate-600">Danilo Reyes (INST-2019)</td>
-                <td className="py-3.5 px-4 font-bold text-emerald-700">94 / 100</td>
-                <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">SYNCED TO LTMS</span>
-                </td>
-                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button onClick={() => {window.previewCert('Katherine Mae Yap', 'Practical Driving Course - Automatic (PDC-AT)', 'PDC-2024-0412', '94/100')}} className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
-                      View
-                    </button>
-                    <button onClick={() => {window.revokeCertificate('Katherine Mae Yap', 'PDC-2024-0412')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Revoke Certificate" aria-label="Revoke PDC-2024-0412">
-                      <span className="material-symbols-outlined text-sm">block</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              {/* Cert 3 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3.5 px-4 font-mono font-bold text-slate-900">PDC-2024-0413</td>
-                <td className="py-3.5 px-4">
-                  <div className="font-bold text-slate-900">Joshua Tan</div>
-                  <div className="text-[10px] text-slate-400 font-mono">LTO ID: D02-23-019842</div>
-                </td>
-                <td className="py-3.5 px-4 font-medium text-slate-800">PDC Sedan Manual (Code B)</td>
-                <td className="py-3.5 px-4 text-slate-600">Engr. Roberto Dalisay</td>
-                <td className="py-3.5 px-4 font-bold text-emerald-700">98 / 100</td>
-                <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">SYNCED TO LTMS</span>
-                </td>
-                <td className="py-3.5 px-4 text-right whitespace-nowrap no-print-col">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button onClick={() => {window.previewCert('Joshua Tan', 'Practical Driving Course - Manual (PDC-MT)', 'PDC-2024-0413', '98/100')}} className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
-                      View
-                    </button>
-                    <button onClick={() => {window.revokeCertificate('Joshua Tan', 'PDC-2024-0413')}} className="p-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none" title="Revoke Certificate" aria-label="Revoke PDC-2024-0413">
-                      <span className="material-symbols-outlined text-sm">block</span>
-                    </button>
-                  </div>
-                </td>
+              <tr>
+                <td colSpan="7" className="py-12 text-center text-slate-500 font-medium">No certificate records found for this period.</td>
               </tr>
 
             </tbody>
@@ -482,7 +407,7 @@ export default function Reports() {
             <p>Memorandum Circular 2021-2287 Standards</p>
           </div>
           <div className="text-right">
-            <p>Official LTO Regional Office Copy • Region XI</p>
+            <p>Official Official Regional Office Copy • Region XI</p>
             <p>St. Joseph Cupertino Driving School — Tagum Main Campus</p>
           </div>
         </div>
@@ -508,7 +433,7 @@ export default function Reports() {
       </div>
 
       <div className="border-2 border-dashed border-slate-200 p-6 rounded-xl text-center space-y-3 bg-slate-50/50">
-        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Republic of the Philippines • Land Transportation Office Accredited</span>
+        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Republic of the Philippines • Government Regulatory Office Accredited</span>
         <h2 className="font-display font-extrabold text-lg text-slate-900">CERTIFICATE OF COMPLETION</h2>
         <p className="text-xs text-slate-500">This is to certify that</p>
         <p id="modalStudent" className="font-display font-extrabold text-xl text-slate-900 underline decoration-amber-500">Joshua Tan</p>

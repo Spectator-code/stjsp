@@ -4,11 +4,28 @@ import { cookies } from 'next/headers';
 
 export async function POST(req) {
   try {
-    const { username, password } = await req.json();
+    let { email, password, firstName, lastName, role } = await req.json();
+
+    // Security: Input validation & sanitization
+    if (!email || !password || !firstName || !lastName || !role) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Limit length to prevent DoS via massive payloads
+    firstName = firstName.toString().trim().substring(0, 50);
+    lastName = lastName.toString().trim().substring(0, 50);
+    email = email.toString().trim().substring(0, 100);
+
+    // Basic sanitization
+    const sanitize = (str) => str.replace(/<[^>]*>?/gm, '');
+    firstName = sanitize(firstName);
+    lastName = sanitize(lastName);
     
-    // In a real application, 'username' should ideally be an email for Supabase Auth,
-    // or you must configure Supabase to accept usernames. We'll assume email here.
-    const email = username;
+    // Role validation
+    const validRoles = ['student', 'staff', 'admin'];
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({ success: false, error: 'Invalid role' }, { status: 400 });
+    }
 
     const cookieStore = await cookies();
     
@@ -27,16 +44,12 @@ export async function POST(req) {
                 cookieStore.set(name, value, options)
               )
             } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
             }
           },
         },
       }
     );
 
-    // If environment variables are missing, fail securely
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
       return NextResponse.json(
         { success: false, error: 'Database connection not configured' },
@@ -44,9 +57,16 @@ export async function POST(req) {
       );
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          role: role || 'student',
+        },
+      },
     });
 
     if (error) {
