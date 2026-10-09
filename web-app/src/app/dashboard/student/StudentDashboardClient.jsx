@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import HeaderAvatar from "../../../../components/HeaderAvatar";
+import HeaderAvatar from "../../../components/HeaderAvatar";
 
 export default function StudentDashboardClient({ user, courses = [], enrollments = [], payments = [], sessions = [] }) {
   const router = useRouter();
