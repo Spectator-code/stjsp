@@ -371,6 +371,7 @@ export default function StudentsClient({ students }) {
                       </div>
                     </div>
                   </>
+                  );
                 })() : (
                   <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-xs text-center text-sm text-slate-500">
                     No active enrollments for this student.
