@@ -113,6 +113,9 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
     }
 
+    // Sync to profiles table so admins can see it
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+
     return NextResponse.json({ success: true, url: publicUrl });
   } catch (err) {
     console.error("Upload error:", err);

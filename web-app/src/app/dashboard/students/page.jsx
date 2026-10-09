@@ -30,6 +30,7 @@ export default async function StudentsPage() {
       id,
       first_name,
       last_name,
+      avatar_url,
       role,
       enrollments (
         id,

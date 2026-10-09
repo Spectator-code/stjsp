@@ -223,7 +223,9 @@ export default function StudentsClient({ students }) {
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">{init}</div>
+                              <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm overflow-hidden">
+                                {s.avatar_url ? <img src={s.avatar_url} alt={name} className="w-full h-full object-cover" /> : init}
+                              </div>
                               <div>
                                 <span className="font-bold text-xs text-slate-900 truncate">{name}</span>
                                 <div className="text-[10px] text-slate-400 font-mono mt-0.5">ID: {s.id.substring(0,8).toUpperCase()}</div>
@@ -265,8 +267,12 @@ export default function StudentsClient({ students }) {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-xl font-display font-bold shadow-md">
-                      {getInitials(activeStudent.first_name, activeStudent.last_name)}
+                    <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-xl font-display font-bold shadow-md overflow-hidden">
+                      {activeStudent.avatar_url ? (
+                        <img src={activeStudent.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        getInitials(activeStudent.first_name, activeStudent.last_name)
+                      )}
                     </div>
                     <div>
                       <h3 className="font-display text-base font-bold text-slate-900">{activeStudent.first_name} {activeStudent.last_name}</h3>
