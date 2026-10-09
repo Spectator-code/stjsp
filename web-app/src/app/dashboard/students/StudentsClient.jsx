@@ -1,11 +1,37 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function StudentsClient({ students }) {
   const [activeStudent, setActiveStudent] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleVerify = async (enrollmentId, field, currentValue) => {
+    try {
+      const res = await fetch(`/api/enrollments/${enrollmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: !currentValue })
+      });
+      if (res.ok) {
+        // Optimistically update the active student state so UI refreshes immediately
+        setActiveStudent(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev };
+          if (updated.enrollments && updated.enrollments[0]) {
+            updated.enrollments[0][field] = !currentValue;
+          }
+          return updated;
+        });
+        router.refresh();
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  };
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = `${student.first_name} ${student.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
@@ -284,8 +310,67 @@ export default function StudentsClient({ students }) {
                           </div>
                         </div>
                       </div>
+                      </div>
                     </div>
-                  );
+
+                    {/* Prerequisites Card */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-xs">
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between items-center">
+                        <span>Prerequisites Verification</span>
+                        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[9px]">CASHIER ONLY</span>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {/* PSA */}
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <span className={`material-symbols-outlined text-lg ${enr.psa_verified ? 'text-emerald-500' : 'text-slate-400'}`}>
+                              {enr.psa_verified ? 'verified' : 'pending_actions'}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-800">PSA Birth Certificate</span>
+                          </div>
+                          <button 
+                            onClick={() => handleVerify(enr.id, 'psa_verified', enr.psa_verified)}
+                            className={`text-[10px] font-bold px-3 py-1 rounded transition-colors ${enr.psa_verified ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                          >
+                            {enr.psa_verified ? 'UNVERIFY' : 'VERIFY'}
+                          </button>
+                        </div>
+                        
+                        {/* ID */}
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <span className={`material-symbols-outlined text-lg ${enr.id_verified ? 'text-emerald-500' : 'text-slate-400'}`}>
+                              {enr.id_verified ? 'verified' : 'pending_actions'}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-800">Valid ID</span>
+                          </div>
+                          <button 
+                            onClick={() => handleVerify(enr.id, 'id_verified', enr.id_verified)}
+                            className={`text-[10px] font-bold px-3 py-1 rounded transition-colors ${enr.id_verified ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                          >
+                            {enr.id_verified ? 'UNVERIFY' : 'VERIFY'}
+                          </button>
+                        </div>
+
+                        {/* Medical */}
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <span className={`material-symbols-outlined text-lg ${enr.medical_verified ? 'text-emerald-500' : 'text-slate-400'}`}>
+                              {enr.medical_verified ? 'verified' : 'pending_actions'}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-800">Medical Certificate</span>
+                          </div>
+                          <button 
+                            onClick={() => handleVerify(enr.id, 'medical_verified', enr.medical_verified)}
+                            className={`text-[10px] font-bold px-3 py-1 rounded transition-colors ${enr.medical_verified ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                          >
+                            {enr.medical_verified ? 'UNVERIFY' : 'VERIFY'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>;
                 })() : (
                   <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6 shadow-xs text-center text-sm text-slate-500">
                     No active enrollments for this student.
