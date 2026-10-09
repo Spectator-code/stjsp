@@ -140,7 +140,9 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
 
   async function confirmReassignInstructor() {
     const sessionId = window.currentSelectedSessionId;
-    const newInstructor = document.getElementById('reassignInstructorSelect').value;
+    const selectEl = document.getElementById('reassignInstructorSelect');
+    if (!selectEl) return;
+    const newInstructor = selectEl.value;
     if (!sessionId || !newInstructor) return;
     try {
       const res = await fetch('/api/sessions', {
@@ -150,7 +152,7 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
       });
       if (!res.ok) throw new Error('Failed to update instructor');
       showSchedToast('Instructor Reassigned', 'Successfully updated the designated instructor.');
-      setShowReassignInstructorModal(false);
+      document.getElementById('reassignInstructorModal').classList.add('hidden');
       setTimeout(() => window.location.reload(), 1500);
     } catch(e) {
       alert('Error updating session: ' + e.message);
@@ -160,7 +162,8 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
   function reassignInstructor() {
     const sessionId = window.currentSelectedSessionId;
     if (!sessionId) { alert('Please select a session on the grid first.'); return; }
-    setShowReassignInstructorModal(true);
+    const modal = document.getElementById('reassignInstructorModal');
+    if (modal) modal.classList.remove('hidden');
   }
 
   async function rescheduleSession() {
@@ -852,6 +855,34 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
     </div>
   </div>
 
+  {/* Reassign Instructor Modal */}
+  <div id="reassignInstructorModal" className="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden border border-slate-200">
+      <div className="bg-slate-900 px-5 py-4 flex justify-between items-center">
+        <h3 className="font-display font-bold text-white text-lg">Reassign Instructor</h3>
+        <button onClick={() => document.getElementById('reassignInstructorModal').classList.add('hidden')} className="text-slate-400 hover:text-white transition-colors">
+          <span className="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div className="p-5 space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Select New Instructor</label>
+          <select id="reassignInstructorSelect" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+            <option value="" disabled selected>-- Pick an Instructor --</option>
+            {instructors.map(inst => (
+              <option key={inst.id} value={`${inst.first_name} ${inst.last_name}`}>
+                {inst.first_name} {inst.last_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button onClick={() => window.confirmReassignInstructor()} className="w-full bg-slate-900 text-white font-bold text-sm py-2 rounded-lg hover:bg-slate-800 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900">
+          Confirm Reassignment
+        </button>
+      </div>
+    </div>
+  </div>
+  
   {/* Toast Notification */}
   <div id="schedToast" role="status" aria-live="polite" className="fixed bottom-20 right-6 transform translate-y-32 transition-transform duration-300 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl">
     <span className="material-symbols-outlined text-emerald-400">task_alt</span>
