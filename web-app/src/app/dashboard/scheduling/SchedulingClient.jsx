@@ -5,6 +5,28 @@ import { useEffect } from "react";
 import Link from "next/link";
 
 export default function SchedulingClient({ sessions, activeEnrollments, activeStudents, pendingBalancesCount }) {
+
+  const getGridStyle = (startTimeStr, endTimeStr) => {
+    let startHour = 8;
+    let endHour = 10;
+    try {
+      if (startTimeStr && startTimeStr.includes('T')) {
+        startHour = new Date(startTimeStr).getHours();
+        endHour = new Date(endTimeStr).getHours();
+      } else if (startTimeStr) {
+        startHour = parseInt(startTimeStr.split(':')[0]);
+        endHour = parseInt(endTimeStr.split(':')[0]);
+        if (startTimeStr.includes('PM') && startHour !== 12) startHour += 12;
+        if (endTimeStr.includes('PM') && endHour !== 12) endHour += 12;
+      }
+    } catch(e) {}
+    
+    let startCol = Math.max(1, startHour - 8 + 1);
+    let span = Math.max(1, endHour - startHour);
+    
+    return { gridColumnStart: startCol, gridColumnEnd: 'span ' + span };
+  };
+
   function showSchedToast(title, msg) {
     const toast = document.getElementById('schedToast');
     if (!toast) return;
