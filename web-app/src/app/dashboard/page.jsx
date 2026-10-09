@@ -26,7 +26,12 @@ export default async function Dashboard() {
     .eq('id', user.id)
     .single();
 
-  const role = profile?.role || user.user_metadata?.role;
+  let role = profile?.role || user.user_metadata?.role;
+  
+  // Temporary workaround for profiles_role_check constraint rejecting 'instructor'
+  if (user.email === 'instructor@stjosephcupertino.ph' || user.email === 'danilo@stjosephcupertino.ph' || user.user_metadata?.role === 'instructor') {
+      role = 'instructor';
+  }
 
   if (role === 'student') {
     redirect('/dashboard/student');

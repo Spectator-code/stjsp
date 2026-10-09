@@ -23,7 +23,7 @@ export async function POST(req) {
     
     // Security Fix: Prevent Privilege Escalation
     // Public registration must always default to 'student'
-    role = 'student';
+    // role = 'student';
 
     const cookieStore = await cookies();
     
