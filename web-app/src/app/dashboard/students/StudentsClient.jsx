@@ -1,5 +1,5 @@
 "use client";
-import HeaderAvatar from "../../components/HeaderAvatar";
+import HeaderAvatar from "../../../components/HeaderAvatar";
 
 import { useState } from "react";
 import Link from "next/link";

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import HeaderAvatar from "../../../components/HeaderAvatar";
+import HeaderAvatar from "../../../../components/HeaderAvatar";
 
 export default function SettingsClient({ user }) {
   const router = useRouter();
