@@ -700,10 +700,14 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
                   Reschedule
                 </button>
                 <button onClick={() => window.reassignCar()} className="py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none">
-                  <span className="material-symbols-outlined text-xs">swap_horiz</span>
+                  <span className="material-symbols-outlined text-xs">directions_car</span>
                   Reassign Car
                 </button>
               </div>
+              <button onClick={() => window.reassignInstructor()} className="w-full py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none mt-2">
+                <span className="material-symbols-outlined text-xs">badge</span>
+                Reassign Instructor
+              </button>
               <button onClick={() => cancelCurrentSession()} className="w-full py-1.5 px-2 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs flex items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none">
                 <span className="material-symbols-outlined text-xs">event_busy</span>
                 Cancel Scheduled Session
