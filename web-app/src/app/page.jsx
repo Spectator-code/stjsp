@@ -175,15 +175,15 @@ export default function Index() {
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex flex-1 items-center justify-center gap-3 lg:gap-4 xl:gap-6 text-[11px] font-semibold text-slate-600 whitespace-nowrap overflow-hidden">
-            <a href="#courses" className="hover:text-slate-900 transition-colors">Courses & Fees</a>
-            <a href="#fleet" className="hover:text-slate-900 transition-colors hidden xl:block">Safety Fleet</a>
-            <a href="#gallery" className="hover:text-amber-600 text-slate-800 font-bold transition-colors flex items-center gap-1">
+            <a href="#courses" onClick={(e) => { e.preventDefault(); document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' }) }} className="hover:text-slate-900 transition-colors">Courses & Fees</a>
+            <a href="#fleet" onClick={(e) => { e.preventDefault(); document.getElementById('fleet')?.scrollIntoView({ behavior: 'smooth' }) }} className="hover:text-slate-900 transition-colors hidden xl:block">Safety Fleet</a>
+            <a href="#gallery" onClick={(e) => { e.preventDefault(); document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' }) }} className="hover:text-amber-600 text-slate-800 font-bold transition-colors flex items-center gap-1">
               <span className="material-symbols-outlined text-sm text-amber-500">photo_library</span>
               Training Gallery
             </a>
-            <a href="#process" className="hover:text-slate-900 transition-colors hidden xl:block">Admission Steps</a>
-            <a href="#instructors" className="hover:text-slate-900 transition-colors">Faculty</a>
-            <a href="#contact" className="hover:text-slate-900 transition-colors">Our Location</a>
+            <a href="#process" onClick={(e) => { e.preventDefault(); document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' }) }} className="hover:text-slate-900 transition-colors hidden xl:block">Admission Steps</a>
+            <a href="#instructors" onClick={(e) => { e.preventDefault(); document.getElementById('instructors')?.scrollIntoView({ behavior: 'smooth' }) }} className="hover:text-slate-900 transition-colors">Faculty</a>
+            <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }) }} className="hover:text-slate-900 transition-colors">Our Location</a>
           </nav>
 
           {/* Action Buttons */}
@@ -1139,7 +1139,7 @@ export default function Index() {
       </main>
 
       {/* Minimal Footer */}
-      <footer className="bg-slate-900 text-white py-12 text-xs border-t border-slate-800">
+      <footer id="contact" className="bg-slate-900 text-white py-12 text-xs border-t border-slate-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-800">
 
