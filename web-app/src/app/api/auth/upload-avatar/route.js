@@ -79,15 +79,30 @@ export async function POST(request) {
 
     // 007 Security: Generate UUID to prevent path traversal and guessable filenames
     const filename = crypto.randomUUID() + '.' + ext;
-    const avatarsDir = path.join(process.cwd(), "public", "avatars");
     
-    // Ensure dir exists
-    await fs.mkdir(avatarsDir, { recursive: true });
-    
-    const filePath = path.join(avatarsDir, filename);
-    await fs.writeFile(filePath, buffer);
+    // Upload directly to Supabase Storage (Required for Vercel/Serverless)
+    const { data: storageData, error: storageError } = await supabase
+      .storage
+      .from('avatars')
+      .upload(filename, buffer, {
+        contentType: file.type,
+        upsert: false
+      });
 
-    const publicUrl = `/avatars/${filename}`;
+    if (storageError) {
+      console.error("Supabase storage error:", storageError);
+      return NextResponse.json({ 
+        success: false, 
+        error: "Storage upload failed. Have you created the 'avatars' bucket in Supabase and configured RLS?" 
+      }, { status: 500 });
+    }
+
+    const { data: publicUrlData } = supabase
+      .storage
+      .from('avatars')
+      .getPublicUrl(filename);
+      
+    const publicUrl = publicUrlData.publicUrl;
 
     // Update user metadata
     const { error: updateError } = await supabase.auth.updateUser({
