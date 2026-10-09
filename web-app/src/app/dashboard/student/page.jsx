@@ -50,7 +50,6 @@ export default async function StudentDashboard() {
       .from('sessions')
       .select('*')
       .in('enrollment_id', enrollmentIds)
-      .gte('start_time', new Date().toISOString())
       .order('start_time', { ascending: true });
     sessions = sData || [];
   }

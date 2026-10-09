@@ -519,7 +519,7 @@ export default function SchedulingClient({ sessions, activeEnrollments, activeSt
                     <span className="text-[10px] text-slate-500 truncate">{session.vehicle_info || 'Unit'}</span>
                   </div>
                   <div className="col-span-8 p-1.5 grid grid-cols-8 gap-1.5 relative min-h-[50px]">
-                    <div className="col-span-3 relative p-1.5 rounded-lg border border-slate-200 bg-emerald-50 shadow-xs flex flex-col hover:border-emerald-300 transition-colors h-full">
+                    <div className="relative p-1.5 rounded-lg border border-slate-200 bg-emerald-50 shadow-xs flex flex-col hover:border-emerald-300 transition-colors h-full" style={getGridStyle(session.start_time, session.end_time)}>
                        <span className="text-[10px] font-bold text-emerald-900 truncate block">{session.enrollments?.profiles?.first_name} {session.enrollments?.profiles?.last_name}</span>
                        <span className="text-[9px] text-emerald-700 flex items-center gap-1 mt-0.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{session.start_time.includes('T') ? new Date(session.start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) : session.start_time} - {session.end_time.includes('T') ? new Date(session.end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) : session.end_time}</span>
                     </div>
