@@ -117,12 +117,12 @@ export default function Reports() {
 
       {/* Campus Tag */}
       <div className="px-4 py-3">
-        <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 text-slate-600">
-            <span className="material-symbols-outlined text-sm text-amber-600">location_on</span>
-            <span className="font-medium truncate">St. Pio Building, Purok Magsanoc, Mankilam Campus</span>
+        <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs gap-2">
+          <div className="flex items-center gap-1.5 text-slate-600 min-w-0">
+            <span className="material-symbols-outlined text-sm text-amber-600 shrink-0">location_on</span>
+            <span className="font-medium truncate">Tagum Main Campus</span>
           </div>
-          <span className="text-[10px] bg-white border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold">Official 11-04</span>
+          <span className="text-[10px] shrink-0 bg-white border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold">Official 11-04</span>
         </div>
       </div>
 
