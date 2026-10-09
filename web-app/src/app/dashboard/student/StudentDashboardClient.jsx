@@ -198,11 +198,11 @@ export default function StudentDashboardClient({ user, courses = [], enrollments
                    <div>
                      <p className="text-xs font-semibold text-emerald-400 mb-1">{sessions[0].notes || "Driving Session"}</p>
                      <p className="text-xl font-bold text-white tracking-tight mb-0.5">
-                       {new Date(sessions[0].date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                       {new Date(sessions[0].start_time).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
                      </p>
                      <p className="text-sm text-slate-300">
-                       {new Date(`1970-01-01T${sessions[0].start_time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
-                       {new Date(`1970-01-01T${sessions[0].end_time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                       {new Date(sessions[0].start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                       {new Date(sessions[0].end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                      </p>
                    </div>
                    <div className="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl">

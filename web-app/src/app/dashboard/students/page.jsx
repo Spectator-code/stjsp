@@ -37,6 +37,9 @@ export default async function StudentsPage() {
         status,
         hours_completed,
         ref_code,
+        psa_verified,
+        id_verified,
+        medical_verified,
         courses (
           name,
           required_hours
