@@ -75,8 +75,8 @@ export default function Portal() {
         const res = await fetch("/api/auth/session");
         const data = await res.json();
         if (data.user) {
-          const role = data.user?.user_metadata?.role;
-          if (role === "admin" || role === "sysadmin" || role === "registrar") {
+          const role = data.role;
+          if (role === "admin" || role === "sysadmin" || role === "registrar" || role === "staff") {
             router.push("/dashboard/operations");
           } else if (role === "cashier") {
             router.push("/dashboard/tuition");
@@ -166,8 +166,8 @@ export default function Portal() {
       const data = await res.json();
       
       if (data.success) {
-        const role = data.user?.user_metadata?.role;
-        if (role === "admin" || role === "sysadmin" || role === "registrar") {
+        const role = data.role;
+        if (role === "admin" || role === "sysadmin" || role === "registrar" || role === "staff") {
           router.push("/dashboard/operations");
         } else if (role === "cashier") {
           router.push("/dashboard/tuition");
@@ -175,7 +175,7 @@ export default function Portal() {
           router.push("/dashboard/scheduling");
         } else if (role === "fleet") {
           router.push("/dashboard/fleet");
-        } else if (role === "instructor" || role === "staff") {
+        } else if (role === "instructor") {
           router.push("/dashboard/instructor");
         } else {
           router.push("/dashboard/student");

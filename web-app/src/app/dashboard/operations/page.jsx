@@ -24,7 +24,13 @@ export default async function Operations() {
     redirect("/portal?tab=login");
   }
 
-  const role = user.user_metadata?.role;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const role = profile?.role || user.user_metadata?.role;
   if (!['admin', 'sysadmin', 'registrar', 'staff'].includes(role)) {
     redirect("/portal?tab=login");
   }

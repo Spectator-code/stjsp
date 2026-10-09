@@ -19,6 +19,17 @@ export async function GET() {
     );
 
     const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      const role = profile?.role || user.user_metadata?.role || 'student';
+      return NextResponse.json({ user, role });
+    }
+    
     return NextResponse.json({ user });
   } catch (error) {
     return NextResponse.json({ user: null });

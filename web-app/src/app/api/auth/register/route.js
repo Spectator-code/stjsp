@@ -21,11 +21,9 @@ export async function POST(req) {
     firstName = sanitize(firstName);
     lastName = sanitize(lastName);
     
-    // Role validation
-    const validRoles = ['student', 'staff', 'admin'];
-    if (!validRoles.includes(role)) {
-      return NextResponse.json({ success: false, error: 'Invalid role' }, { status: 400 });
-    }
+    // Security Fix: Prevent Privilege Escalation
+    // Public registration must always default to 'student'
+    role = 'student';
 
     const cookieStore = await cookies();
     

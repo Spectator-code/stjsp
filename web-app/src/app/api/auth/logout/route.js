@@ -29,5 +29,5 @@ export async function POST(request) {
 
   await supabase.auth.signOut();
 
-  return NextResponse.redirect(new URL('/portal?tab=login', request.url));
+  return NextResponse.redirect(new URL('/portal?tab=login', request.url), 303);
 }

@@ -53,7 +53,15 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: error.message }, { status: 401 });
     }
 
-    return NextResponse.json({ success: true, user: data.user });
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    const role = profileData?.role || data.user?.user_metadata?.role || 'student';
+
+    return NextResponse.json({ success: true, user: data.user, role });
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
   }

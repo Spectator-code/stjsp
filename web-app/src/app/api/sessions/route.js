@@ -22,7 +22,13 @@ export async function POST(request) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
-    const role = user.user_metadata?.role;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    const role = profile?.role || user.user_metadata?.role;
     if (!['admin', 'sysadmin', 'registrar', 'staff', 'dispatcher', 'instructor'].includes(role)) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
     }
@@ -62,12 +68,15 @@ export async function POST(request) {
     const instructor = payload.instructor_id || 'unassigned';
     const vehicle = payload.vehicle_id || 'unassigned';
 
+    const safeInstructor = instructor.replace(/"/g, '');
+    const safeVehicle = vehicle.replace(/"/g, '');
+
     if (instructor !== 'unassigned' || vehicle !== 'unassigned') {
       const { data: conflicts } = await supabase
         .from('sessions')
         .select('id, instructor_name, vehicle_info, start_time, end_time')
         .neq('status', 'cancelled')
-        .or(`instructor_name.eq."${instructor}",vehicle_info.eq."${vehicle}"`);
+        .or(`instructor_name.eq."${safeInstructor}",vehicle_info.eq."${safeVehicle}"`);
 
       if (conflicts && conflicts.length > 0) {
         const hasConflict = conflicts.some(c => {
@@ -139,8 +148,14 @@ export async function PATCH(request) {
     { cookies: { getAll() { return cookieStore.getAll(); }, setAll(c) { try { c.forEach(({name,value,options}) => cookieStore.set(name,value,options)); }catch(e){} } } }
   );
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    const role = profile?.role || user.user_metadata?.role;
+    if (!['admin', 'sysadmin', 'registrar', 'staff', 'dispatcher', 'instructor'].includes(role)) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+    }
     
     const payload = await request.json();
     if (!payload.id) return new Response(JSON.stringify({ error: 'Missing session id' }), { status: 400 });

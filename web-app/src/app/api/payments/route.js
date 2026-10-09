@@ -29,6 +29,12 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    const role = profile?.role || user.user_metadata?.role;
+    if (!['admin', 'sysadmin', 'cashier', 'staff', 'registrar'].includes(role)) {
+      return NextResponse.json({ success: false, error: "Forbidden: insufficient permissions" }, { status: 403 });
+    }
+
     const { data, error } = await supabase.from('payments').insert([
       {
         enrollment_id: enrollmentId,

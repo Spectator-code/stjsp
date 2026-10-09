@@ -44,18 +44,21 @@ h4,
   outline-offset: 2px !important;
 }
 
-/* Eliminate active touch/press scaling animations across all buttons and links */
+/* Add 'pressing' hand cursor and active scale effect across all buttons and links */
 button,
 a,
-[role="button"] {
+[role="button"],
+.gallery-filter-btn {
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer !important;
+  transition: transform 0.1s ease-in-out;
 }
 
 button:active,
 a:active,
-[role="button"]:active {
-  transform: none !important;
-  scale: 1 !important;
+[role="button"]:active,
+.gallery-filter-btn:active {
+  transform: scale(0.95) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
