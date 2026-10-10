@@ -38,6 +38,7 @@ export default function Portal() {
       else if (role === "dispatcher") router.push("/dashboard/scheduling");
       else if (role === "fleet") router.push("/dashboard/fleet");
       else if (role === "cashier") router.push("/dashboard/tuition");
+      else if (role === "instructor") router.push("/dashboard/instructor");
     };
 
     // Safely parse URL params after mounting to prevent SSR hydration mismatch
@@ -84,6 +85,8 @@ export default function Portal() {
             router.push("/dashboard/scheduling");
           } else if (role === "fleet") {
             router.push("/dashboard/fleet");
+          } else if (role === "instructor") {
+            router.push("/dashboard/instructor");
           } else {
             router.push("/dashboard/student");
           }
@@ -193,6 +196,7 @@ export default function Portal() {
     else if (role === "dispatcher") router.push("/dashboard/scheduling");
     else if (role === "fleet") router.push("/dashboard/fleet");
     else if (role === "cashier") router.push("/dashboard/tuition");
+    else if (role === "instructor") router.push("/dashboard/instructor");
   };
 
   return (

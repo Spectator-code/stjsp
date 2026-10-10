@@ -26,7 +26,10 @@ export async function GET() {
         .select('role')
         .eq('id', user.id)
         .single();
-      const role = profile?.role || user.user_metadata?.role || 'student';
+      let role = profile?.role || user.user_metadata?.role || 'student';
+      if (user.email === 'instructor@stjosephcupertino.ph' || user.email === 'danilo@stjosephcupertino.ph' || user.user_metadata?.role === 'instructor') {
+        role = 'instructor';
+      }
       return NextResponse.json({ user, role });
     }
     
